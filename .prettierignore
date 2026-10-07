@@ -1,0 +1,4 @@
+dist
+node_modules
+test/fixture/elgavio-types.ts
+src/openapi.ts

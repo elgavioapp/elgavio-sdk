@@ -1,0 +1,364 @@
+{
+  "locales": [
+    {
+      "code": "en",
+      "default": true
+    },
+    {
+      "code": "de",
+      "default": false
+    }
+  ],
+  "collections": [
+    {
+      "key": "pages",
+      "name": "Pages",
+      "pathPrefix": null,
+      "hierarchical": true,
+      "single": false,
+      "fields": [
+        {
+          "key": "seo",
+          "label": "Seo",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "group",
+          "children": [
+            {
+              "key": "description",
+              "label": "Description",
+              "helpText": null,
+              "cardinality": {
+                "kind": "one"
+              },
+              "required": false,
+              "type": "text",
+              "config": {
+                "maxLength": 160
+              }
+            }
+          ]
+        },
+        {
+          "key": "featuredPost",
+          "label": "Featuredpost",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "reference",
+          "config": {
+            "targets": [
+              {
+                "collection": "posts",
+                "previewFields": ["excerpt"]
+              }
+            ]
+          }
+        },
+        {
+          "key": "hero",
+          "label": "Hero",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "media",
+          "config": {
+            "accept": "image/*"
+          }
+        }
+      ],
+      "filters": [
+        {
+          "key": "publishedAt",
+          "operators": ["eq", "ne", "in", "lt", "lte", "gt", "gte"]
+        },
+        {
+          "key": "featuredPost",
+          "operators": ["eq", "ne", "in", "exists"]
+        }
+      ],
+      "sort": ["title", "publishedAt"]
+    },
+    {
+      "key": "posts",
+      "name": "Posts",
+      "pathPrefix": "blog",
+      "hierarchical": false,
+      "single": false,
+      "fields": [
+        {
+          "key": "excerpt",
+          "label": "Excerpt",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "text",
+          "config": {
+            "maxLength": null
+          }
+        },
+        {
+          "key": "body",
+          "label": "Body",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": true,
+          "type": "richText"
+        },
+        {
+          "key": "tags",
+          "label": "Tags",
+          "helpText": null,
+          "cardinality": {
+            "kind": "many",
+            "min": null,
+            "max": null
+          },
+          "required": false,
+          "type": "list",
+          "config": {
+            "options": [
+              {
+                "value": "news",
+                "label": "News"
+              },
+              {
+                "value": "it's",
+                "label": "Quote"
+              }
+            ]
+          }
+        },
+        {
+          "key": "rating",
+          "label": "Rating",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "number",
+          "config": {
+            "min": 0,
+            "max": 5,
+            "integer": true
+          }
+        },
+        {
+          "key": "featured",
+          "label": "Featured",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "key": "day",
+          "label": "Day",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": true,
+          "type": "date",
+          "config": {
+            "time": false
+          }
+        },
+        {
+          "key": "links",
+          "label": "Links",
+          "helpText": null,
+          "cardinality": {
+            "kind": "many",
+            "min": null,
+            "max": null
+          },
+          "required": false,
+          "type": "group",
+          "children": [
+            {
+              "key": "label",
+              "label": "Label",
+              "helpText": null,
+              "cardinality": {
+                "kind": "one"
+              },
+              "required": true,
+              "type": "text",
+              "config": {
+                "maxLength": null
+              }
+            },
+            {
+              "key": "link",
+              "label": "Link",
+              "helpText": null,
+              "cardinality": {
+                "kind": "one"
+              },
+              "required": true,
+              "type": "link"
+            }
+          ]
+        },
+        {
+          "key": "related",
+          "label": "Related",
+          "helpText": null,
+          "cardinality": {
+            "kind": "many",
+            "min": null,
+            "max": null
+          },
+          "required": false,
+          "type": "reference",
+          "config": {
+            "targets": [
+              {
+                "collection": "posts",
+                "previewFields": []
+              },
+              {
+                "collection": "pages",
+                "previewFields": []
+              }
+            ]
+          }
+        },
+        {
+          "key": "meta",
+          "label": "Meta",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "json"
+        }
+      ],
+      "filters": [
+        {
+          "key": "publishedAt",
+          "operators": ["eq", "ne", "in", "lt", "lte", "gt", "gte"]
+        },
+        {
+          "key": "tags",
+          "operators": ["contains", "exists"]
+        },
+        {
+          "key": "rating",
+          "operators": ["eq", "ne", "in", "lt", "lte", "gt", "gte", "exists"]
+        },
+        {
+          "key": "featured",
+          "operators": ["eq", "ne", "exists"]
+        }
+      ],
+      "sort": ["title", "publishedAt", "rating"]
+    },
+    {
+      "key": "settings",
+      "name": "Settings",
+      "pathPrefix": null,
+      "hierarchical": false,
+      "single": true,
+      "fields": [
+        {
+          "key": "siteName",
+          "label": "Sitename",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": true,
+          "type": "text",
+          "config": {
+            "maxLength": null
+          }
+        }
+      ],
+      "filters": [
+        {
+          "key": "publishedAt",
+          "operators": ["eq", "ne", "in", "lt", "lte", "gt", "gte"]
+        }
+      ],
+      "sort": ["title", "publishedAt"]
+    }
+  ],
+  "blocks": [
+    {
+      "key": "hero",
+      "name": "Hero",
+      "description": null,
+      "availableIn": "all",
+      "fields": [
+        {
+          "key": "heading",
+          "label": "Heading",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": true,
+          "type": "text",
+          "config": {
+            "maxLength": null
+          }
+        },
+        {
+          "key": "body",
+          "label": "Body",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": false,
+          "type": "richText"
+        }
+      ]
+    },
+    {
+      "key": "quote",
+      "name": "Quote",
+      "description": "A pull quote",
+      "availableIn": ["posts"],
+      "fields": [
+        {
+          "key": "text",
+          "label": "Text",
+          "helpText": null,
+          "cardinality": {
+            "kind": "one"
+          },
+          "required": true,
+          "type": "text",
+          "config": {
+            "maxLength": null
+          }
+        }
+      ]
+    },
+    {
+      "key": "divider",
+      "name": "Divider",
+      "description": null,
+      "availableIn": ["pages"],
+      "fields": []
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "extends": "@elgavioapp/code-quality/tsconfig/base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": false,
+    "noEmit": true
+  },
+  "include": ["src", "scripts", "vitest.config.ts"]
+}

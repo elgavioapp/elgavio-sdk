@@ -1,0 +1,78 @@
+name: Publish package
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump (ignored if an exact version is given below)'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: minor
+      version:
+        description: 'Exact version to publish, e.g. 1.2.3 (overrides the bump type above if set)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  packages: read
+  # npm's trusted publishing: the registry trusts this workflow, so no npm token is stored.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
+          scope: '@elgavioapp'
+
+      - name: Install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm ci
+
+      - name: Typecheck, lint, test
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: bump
+        env:
+          BUMP_TYPE: ${{ inputs.bump }}
+          EXACT_VERSION: ${{ inputs.version }}
+        run: |
+          TARGET="${EXACT_VERSION:-$BUMP_TYPE}"
+          NEW_TAG=$(npm version "$TARGET" -m "chore(release): %s")
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Push version bump and tag
+        run: git push origin main --follow-tags
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --registry https://registry.npmjs.org
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${{ steps.bump.outputs.tag }}" --title "${{ steps.bump.outputs.tag }}" --generate-notes
