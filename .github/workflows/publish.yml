@@ -60,8 +60,9 @@ jobs:
           EXACT_VERSION: ${{ inputs.version }}
         run: |
           TARGET="${EXACT_VERSION:-$BUMP_TYPE}"
-          NEW_TAG=$(npm version "$TARGET" -m "chore(release): %s")
-          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          # Not npm version's own output: the version script's log lines come with it.
+          npm version "$TARGET" -m "Release %s"
+          echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Push version bump and tag
         run: git push origin main --follow-tags
