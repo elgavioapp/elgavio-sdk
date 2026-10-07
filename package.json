@@ -44,8 +44,7 @@
     "url": "git+https://github.com/elgavioapp/elgavio-sdk.git"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "devDependencies": {
     "@elgavioapp/code-quality": "^0.3.0",
