@@ -1,6 +1,7 @@
 import { MAX_LONG_PAGE_LIMIT, type ElgavioClient } from './client.js';
 import type { ContentModel } from './model.js';
-import type { DeliveredPath } from './types.js';
+import type { Change, DeliveredPath, WebhookPayload } from './types.js';
+import { ElgavioWebhookError, verifyWebhook, type VerifyWebhookOptions } from './webhook.js';
 
 export interface StaticParamsOptions {
   /** Only this collection's entries. */
@@ -74,3 +75,59 @@ export const localizedStaticParams = async <Content extends ContentModel>(
   );
   return perLocale.flat();
 };
+
+export interface RevalidateFromWebhookOptions extends VerifyWebhookOptions {
+  /** `revalidatePath` from `next/cache`, passed in so the SDK needs no Next.js of its own. */
+  revalidatePath: (path: string, type?: 'layout' | 'page') => void;
+  /**
+   * The app's routes a change shows on: its path and, for a move, the one it had. Return more for
+   * a locale prefix (`/${change.locale}${change.path}`) or a listing page that shows it.
+   */
+  pathsOf?: (change: Change) => readonly string[];
+}
+
+const changedPaths = (change: Change) =>
+  [change.path, change.previousPath].filter((path): path is string => path !== null);
+
+// A schema or media change can show anywhere, and a truncated call doesn't name everything.
+const changesEverything = (payload: WebhookPayload) =>
+  payload.truncated || payload.changes.some(({ kind }) => kind === 'schema' || kind === 'media');
+
+/**
+ * A route handler for a webhook: verifies the call, then revalidates the paths it names, or the
+ * whole app when it can't name them all. Answers 401 to a call that isn't signed by the secret.
+ *
+ * ```ts
+ * // app/api/elgavio/route.ts
+ * import { revalidatePath } from 'next/cache';
+ * export const POST = revalidateFromWebhook({ secret: process.env.ELGAVIO_WEBHOOK_SECRET!, revalidatePath });
+ * ```
+ */
+export const revalidateFromWebhook =
+  ({ revalidatePath, pathsOf = changedPaths, ...verify }: RevalidateFromWebhookOptions) =>
+  async (request: Request): Promise<Response> => {
+    let payload: WebhookPayload;
+    try {
+      payload = await verifyWebhook(
+        await request.text(),
+        request.headers.get('elgavio-signature'),
+        verify,
+      );
+    } catch (error) {
+      if (error instanceof ElgavioWebhookError) {
+        return Response.json({ error: error.reason }, { status: 401 });
+      }
+      throw error;
+    }
+
+    if (changesEverything(payload)) {
+      revalidatePath('/', 'layout');
+      return Response.json({ revalidated: ['/'] });
+    }
+
+    const paths = [...new Set(payload.changes.flatMap((change) => pathsOf(change)))];
+    for (const path of paths) {
+      revalidatePath(path);
+    }
+    return Response.json({ revalidated: paths });
+  };

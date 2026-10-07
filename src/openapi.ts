@@ -821,6 +821,45 @@ export interface components {
             path: string;
             children: components["schemas"]["DeliveredTreeNode"][];
         };
+        /** @description The body of a webhook's `POST`. `Elgavio-Signature` is `t=<unix seconds>,v1=<hex>`, the HMAC-SHA256 of `<t>.<body>` under the signing secret. */
+        DeliveryWebhookPayload: {
+            /** @enum {string} */
+            event: "content.changed";
+            /**
+             * @description `publish`: a minute after the last change. `deploy`: someone pressed the project's Deploy button.
+             * @enum {string}
+             */
+            trigger: "publish" | "deploy";
+            project: {
+                id: string;
+            };
+            /** @description The changes are those after this `seq`. */
+            since: number;
+            /** @description The `seq` they reach, a `since` for `/changes`. */
+            next: number;
+            /** @description In order, at most 100. */
+            changes: {
+                /** @description Several changes of one write share it. */
+                seq: number;
+                at: string;
+                /**
+                 * @description `published`: an entry served for the first time or served differently, refetch it. `unpublished` and `deleted`: no longer served. `moved`: a new path or place in its tree. `media`: a media record's alt text, for every entry showing it. `redirect`: the redirect from `path` is new, changed or gone. `schema`: collections, blocks or languages changed, refetch what depends on them.
+                 * @enum {string}
+                 */
+                kind: "published" | "unpublished" | "deleted" | "moved" | "media" | "redirect" | "schema";
+                /** @description The entry's id, or the media record's for `media`; an entry's other languages and entries referencing it read it too. */
+                id: string | null;
+                /** @description The entry's collection key; for `schema`, the collection changed, null for others. */
+                collection: string | null;
+                locale: string | null;
+                /** @description A public path: an entry's (the one it had, once gone), or a redirect's `from`. */
+                path: string | null;
+                /** @description For `moved`, the path it had. */
+                previousPath: string | null;
+            }[];
+            /** @description More changes than `changes` holds: read them all from `/changes?since=`. */
+            truncated: boolean;
+        };
         DeliverySchemaField: {
             /** @description The key it is served under. */
             key: string;

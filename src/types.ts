@@ -73,6 +73,9 @@ export type Change = Changes['data'][number];
 
 export type ChangeKind = Change['kind'];
 
+/** The body of a webhook call, once `verifyWebhook` has checked its signature. */
+export type WebhookPayload = Schemas['DeliveryWebhookPayload'];
+
 export type Project = Answer<'/delivery/v1/project'>;
 
 export type Locale = Project['locales'][number];

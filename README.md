@@ -130,6 +130,45 @@ export const generateStaticParams = () =>
 `[locale]`. An entry at the route's own path has an empty `slug`, which only an optional catch-all,
 `[[...slug]]`, takes.
 
+## Webhooks
+
+A project's webhooks `POST` what changed, signed in `Elgavio-Signature` with the webhook's signing
+secret. `verifyWebhook` checks the signature against the raw body and returns the payload: the
+changes as `/changes` lists them, at most 100, with `truncated` when there were more. It refuses
+a signature older than five minutes (`tolerance`, in seconds).
+
+```ts
+import { verifyWebhook } from '@elgavio/sdk';
+
+const payload = await verifyWebhook(rawBody, request.headers.get('elgavio-signature'), {
+  secret: process.env.ELGAVIO_WEBHOOK_SECRET!,
+});
+for (const change of payload.changes) {
+  // Refetch change.id, purge change.path, reindex…
+}
+```
+
+A refused call throws `ElgavioWebhookError`, whose `reason` is `signatureMissing`,
+`signatureInvalid` or `signatureExpired`. A build hook from Vercel, Netlify or Cloudflare Pages
+needs none of this: it ignores the body.
+
+In Next.js, `revalidateFromWebhook` is the whole route handler. It revalidates each changed path
+(and a moved entry's old one), or the whole app for a change to the content types or media, or a
+truncated call, and answers 401 to an unsigned one.
+
+```ts
+// app/api/elgavio/route.ts
+import { revalidatePath } from 'next/cache';
+import { revalidateFromWebhook } from '@elgavio/sdk/next';
+
+export const POST = revalidateFromWebhook({
+  secret: process.env.ELGAVIO_WEBHOOK_SECRET!,
+  revalidatePath,
+  // Optional: where a change shows in your routes.
+  pathsOf: (change) => (change.path === null ? [] : [`/${change.locale}${change.path}`]),
+});
+```
+
 ## Versions
 
 Until its first stable release the SDK is `0.x`. From then on its major version follows the delivery
