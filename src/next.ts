@@ -1,6 +1,7 @@
 import { MAX_LONG_PAGE_LIMIT, type ElgavioClient } from './client.js';
 import type { ContentModel } from './model.js';
-import type { Change, DeliveredPath, WebhookPayload } from './types.js';
+import { isElgavioError } from './errors.js';
+import type { Change, DeliveredPath, PreviewEntry, WebhookPayload } from './types.js';
 import { ElgavioWebhookError, verifyWebhook, type VerifyWebhookOptions } from './webhook.js';
 
 export interface StaticParamsOptions {
@@ -130,4 +131,47 @@ export const revalidateFromWebhook =
       revalidatePath(path);
     }
     return Response.json({ revalidated: paths });
+  };
+
+export interface DraftModeRouteOptions {
+  /** A client of a secret token with the `preview` scope. */
+  client: Pick<ElgavioClient, 'verifyPreview'>;
+  /** `draftMode` from `next/headers`, passed in so the SDK needs no Next.js of its own. */
+  draftMode: () => Promise<{ enable: () => void }>;
+  /** The app's route for the entry: its path by default. Return a locale prefix if routes have one. */
+  pathOf?: (entry: PreviewEntry) => string;
+}
+
+/**
+ * The route a collection's preview URL opens: checks the `elgavioPreview` code, turns on draft
+ * mode, and redirects to the entry. Read with `createClient({ token, draft: true })` while
+ * `(await draftMode()).isEnabled`. Answers 400 to a missing, expired or foreign code.
+ *
+ * ```ts
+ * // app/api/preview/route.ts: preview URL https://your.app/api/preview
+ * import { draftMode } from 'next/headers';
+ * export const GET = draftModeRoute({ client, draftMode });
+ * ```
+ */
+export const draftModeRoute =
+  ({ client, draftMode, pathOf = (entry) => entry.path }: DraftModeRouteOptions) =>
+  async (request: Request): Promise<Response> => {
+    const code = new URL(request.url).searchParams.get('elgavioPreview');
+    if (code === null || code === '') {
+      return Response.json({ error: 'DELIVERY_PREVIEW_CODE_INVALID' }, { status: 400 });
+    }
+    let entry: PreviewEntry;
+    try {
+      ({ entry } = await client.verifyPreview(code));
+    } catch (error) {
+      if (isElgavioError(error) && error.status < 500) {
+        return Response.json({ error: error.reason ?? error.code }, { status: error.status });
+      }
+      throw error;
+    }
+    (await draftMode()).enable();
+    return new Response(null, {
+      status: 307,
+      headers: { Location: new URL(pathOf(entry), request.url).toString() },
+    });
   };

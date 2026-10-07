@@ -151,6 +151,8 @@ export interface paths {
                     locale?: string;
                     /** @description Every rich-text value as an HTML string, the JSON document (images carry their `url`), or plain text with a blank line between blocks. */
                     richText?: "html" | "json" | "text";
+                    /** @description Draft mode: each entry as its draft where that draft would pass publish validation, else as published; an entry never published shows once its draft would pass. Needs a token with the `preview` scope, or a preview session in `Elgavio-Preview`. Never cached. */
+                    draft?: "true" | "false";
                 };
                 header?: never;
                 path: {
@@ -213,6 +215,8 @@ export interface paths {
                     fields?: string;
                     /** @description A comma list of keys, each descending with a leading `-`: `-publishDate,title`. Sorts by `title`, `publishedAt`, or a filterable field holding one text, number, date, boolean or list value. Text compares in the language asked for. Entries without a value come last. */
                     sort?: string;
+                    /** @description Draft mode: each entry as its draft where that draft would pass publish validation, else as published; an entry never published shows once its draft would pass. Needs a token with the `preview` scope, or a preview session in `Elgavio-Preview`. Never cached. */
+                    draft?: "true" | "false";
                 };
                 header?: never;
                 path: {
@@ -273,6 +277,8 @@ export interface paths {
                     locale?: string;
                     /** @description Every rich-text value as an HTML string, the JSON document (images carry their `url`), or plain text with a blank line between blocks. */
                     richText?: "html" | "json" | "text";
+                    /** @description Draft mode: each entry as its draft where that draft would pass publish validation, else as published; an entry never published shows once its draft would pass. Needs a token with the `preview` scope, or a preview session in `Elgavio-Preview`. Never cached. */
+                    draft?: "true" | "false";
                 };
                 header?: never;
                 path: {
@@ -323,6 +329,8 @@ export interface paths {
                 query?: {
                     /** @description A language of the project's; its default language when left out. */
                     locale?: string;
+                    /** @description Draft mode: each entry as its draft where that draft would pass publish validation, else as published; an entry never published shows once its draft would pass. Needs a token with the `preview` scope, or a preview session in `Elgavio-Preview`. Never cached. */
+                    draft?: "true" | "false";
                 };
                 header?: never;
                 path: {
@@ -379,6 +387,8 @@ export interface paths {
                     richText?: "html" | "json" | "text";
                     /** @description A public path, as an entry's `path` reads: `/blog/hello`. A trailing slash is ignored. */
                     path: string;
+                    /** @description Draft mode: each entry as its draft where that draft would pass publish validation, else as published; an entry never published shows once its draft would pass. Needs a token with the `preview` scope, or a preview session in `Elgavio-Preview`. Never cached. */
+                    draft?: "true" | "false";
                 };
                 header?: never;
                 path?: never;
@@ -635,6 +645,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/delivery/v1/preview/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Checks a preview code from the entry editor's Preview button, valid five minutes, and answers the entry to open in draft mode, with a preview session for reading drafts. A code of another project is `DELIVERY_PREVIEW_CODE_INVALID`, as an expired one is. */
+        get: {
+            parameters: {
+                query: {
+                    /** @description The `elgavioPreview` parameter the preview URL was opened with. */
+                    code: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            entry: {
+                                id: string;
+                                collection: string;
+                                locale: string;
+                                path: string;
+                            };
+                            /** @description Sent as `Elgavio-Preview` with `draft=true`, it lets this token read the project's drafts for an hour: how a public token, which never reads them on its own, previews. */
+                            previewSession: {
+                                value: string;
+                                expiresAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description An error, in the envelope every error shares. */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeliveryErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -644,7 +714,7 @@ export interface components {
                 /** @enum {string} */
                 code: "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR";
                 /** @enum {string|null} */
-                reason: "FIELD_ERRORS" | "DELIVERY_TOKEN_INVALID" | "DELIVERY_SCOPE_MISSING" | "DELIVERY_LOCALE_UNKNOWN" | "DELIVERY_NOT_SINGLE" | "DELIVERY_NOT_HIERARCHICAL" | null;
+                reason: "FIELD_ERRORS" | "DELIVERY_TOKEN_INVALID" | "DELIVERY_SCOPE_MISSING" | "DELIVERY_LOCALE_UNKNOWN" | "DELIVERY_NOT_SINGLE" | "DELIVERY_NOT_HIERARCHICAL" | "DELIVERY_PREVIEW_CODE_INVALID" | null;
                 message: string;
                 fieldErrors: {
                     field: string;

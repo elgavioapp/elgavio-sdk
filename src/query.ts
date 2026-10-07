@@ -16,6 +16,8 @@ export interface QueryParams {
   limit?: number;
   path?: string;
   since?: number;
+  draft?: boolean;
+  code?: string;
 }
 
 const scalarText = (value: FilterScalar): string =>
@@ -81,6 +83,12 @@ export const queryString = (params: QueryParams): string => {
   }
   if (params.since !== undefined) {
     pairs.push(['since', String(params.since)]);
+  }
+  if (params.draft === true) {
+    pairs.push(['draft', 'true']);
+  }
+  if (params.code !== undefined) {
+    pairs.push(['code', params.code]);
   }
   return pairs.length === 0
     ? ''

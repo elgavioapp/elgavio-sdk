@@ -208,3 +208,38 @@ describe('createClient', () => {
     await expect(createClient({ token: 'elg_x', fetch }).resolve('/a')).rejects.toThrow('No');
   });
 });
+
+describe('draft mode and preview', () => {
+  it('asks for drafts on content reads only, with the preview session, and keeps none', async () => {
+    const { fetch, sent } = fakeFetch(
+      json(page([]), { headers: { ETag: '"v1"', 'Cache-Control': 'no-store' } }),
+      json(page([]), { headers: { 'Cache-Control': 'no-store' } }),
+      json({ data: [], meta: { page: 1, limit: 100, total: 0, totalPages: 1 } }),
+    );
+    const client = createClient({ token: 'elg_x', fetch, draft: true, previewSession: 's.1' });
+
+    await client.entries('posts');
+    await client.entries('posts');
+    await client.paths();
+
+    expect(sent.map(({ url }) => url)).toEqual([
+      'https://api.elgavio.com/delivery/v1/collections/posts/entries?draft=true',
+      'https://api.elgavio.com/delivery/v1/collections/posts/entries?draft=true',
+      'https://api.elgavio.com/delivery/v1/paths',
+    ]);
+    expect(sent[0]?.headers['Elgavio-Preview']).toBe('s.1');
+    expect(sent[1]?.headers['If-None-Match']).toBeUndefined();
+  });
+
+  it('verifies a preview code', async () => {
+    const answer = {
+      entry: { id: 'e1', collection: 'pages', locale: 'en', path: '/about' },
+      previewSession: { value: 's.1', expiresAt: '2026-10-08T00:00:00.000Z' },
+    };
+    const { fetch, sent } = fakeFetch(json(answer));
+    const client = createClient({ token: 'elg_x', fetch });
+
+    expect(await client.verifyPreview('a.b')).toEqual(answer);
+    expect(sent[0]?.url).toBe('https://api.elgavio.com/delivery/v1/preview/verify?code=a.b');
+  });
+});

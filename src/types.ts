@@ -78,6 +78,11 @@ export type WebhookPayload = Schemas['DeliveryWebhookPayload'];
 
 export type Project = Answer<'/delivery/v1/project'>;
 
+/** `verifyPreview`: the entry to open in draft mode, and a session for reading drafts. */
+export type PreviewVerification = Answer<'/delivery/v1/preview/verify'>;
+
+export type PreviewEntry = PreviewVerification['entry'];
+
 export type Locale = Project['locales'][number];
 
 /** `/schema`: what `elgavio types` generates from. */

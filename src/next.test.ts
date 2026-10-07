@@ -1,7 +1,13 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { createClient } from './client.js';
-import { localizedStaticParams, revalidateFromWebhook, staticParams } from './next.js';
+import {
+  draftModeRoute,
+  localizedStaticParams,
+  revalidateFromWebhook,
+  staticParams,
+} from './next.js';
+import { ElgavioError } from './errors.js';
 import type { Change, DeliveredPath, WebhookPayload } from './types.js';
 
 const path = (collection: string, locale: string, value: string): DeliveredPath => ({
@@ -172,5 +178,53 @@ describe('revalidateFromWebhook', () => {
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: 'signatureInvalid' });
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe('draftModeRoute', () => {
+  const entry = { id: 'e1', collection: 'pages', locale: 'de', path: '/de/ueber' };
+  const verified = {
+    entry,
+    previewSession: { value: 's.1', expiresAt: '2026-10-08T00:00:00.000Z' },
+  };
+
+  it('turns on draft mode and redirects to the entry the code names', async () => {
+    const enable = vi.fn();
+    const verifyPreview = vi.fn(() => Promise.resolve(verified));
+    const route = draftModeRoute({
+      client: { verifyPreview },
+      draftMode: () => Promise.resolve({ enable }),
+    });
+
+    const response = await route(new Request('https://app.example/api/preview?elgavioPreview=a.b'));
+
+    expect(verifyPreview).toHaveBeenCalledWith('a.b');
+    expect(enable).toHaveBeenCalled();
+    expect(response.status).toBe(307);
+    expect(response.headers.get('Location')).toBe('https://app.example/de/ueber');
+  });
+
+  it('answers a refused code with its reason, and leaves draft mode off', async () => {
+    const enable = vi.fn();
+    const route = draftModeRoute({
+      client: {
+        verifyPreview: () =>
+          Promise.reject(
+            new ElgavioError(400, {
+              code: 'VALIDATION_ERROR',
+              reason: 'DELIVERY_PREVIEW_CODE_INVALID',
+              message: 'Expired.',
+              fieldErrors: [],
+            }),
+          ),
+      },
+      draftMode: () => Promise.resolve({ enable }),
+    });
+
+    const response = await route(new Request('https://app.example/api/preview?elgavioPreview=x'));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'DELIVERY_PREVIEW_CODE_INVALID' });
+    expect(enable).not.toHaveBeenCalled();
+    expect((await route(new Request('https://app.example/api/preview'))).status).toBe(400);
   });
 });

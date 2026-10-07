@@ -37,6 +37,7 @@ A collection's **Try it** page in Elgavio builds these calls for you.
 | `paths(query)`          | one page of every published path, for static generation and sitemaps        |
 | `redirects(query)`      | one page of the redirects                                                   |
 | `changes(since)`        | the change feed: what changed since your last `next`                        |
+| `verifyPreview(code)`   | a preview code from Elgavio's Preview button: see [Preview](#preview)       |
 | `project()`, `schema()` | the project's languages and collections; its fields, for the type generator |
 
 - **`filter`**: `{ key: value }` is equality; `{ key: { op: value } }` takes `eq`, `ne`, `in` (an
@@ -168,6 +169,39 @@ export const POST = revalidateFromWebhook({
   pathsOf: (change) => (change.path === null ? [] : [`/${change.locale}${change.path}`]),
 });
 ```
+
+## Preview
+
+A collection's preview URL, set in its settings, is where Elgavio's **Preview** button opens a
+draft: a route of your app (`https://your.app/api/preview`) or a link into it
+(`yourapp://preview?id={id}`). `{id}`, `{collection}`, `{path}` and `{locale}` are filled in, and a
+code valid five minutes is added as `elgavioPreview`.
+
+Your app verifies the code, then reads in draft mode: each entry as its draft where that draft would
+pass publishing, else as published. Draft responses are never cached.
+
+- **With a server**: a secret token with the `preview` scope reads drafts.
+  `createClient({ token, draft: true })`.
+- **Without one**: a public token never reads drafts on its own. `verifyPreview(code)` returns a
+  `previewSession`, valid an hour, that lets it:
+  `createClient({ token, draft: true, previewSession: previewSession.value })`.
+
+In Next.js, `draftModeRoute` is the whole preview route: it verifies the code, turns on draft mode
+and redirects to the entry.
+
+```ts
+// app/api/preview/route.ts
+import { draftMode } from 'next/headers';
+import { createClient } from '@elgavio/sdk';
+import { draftModeRoute } from '@elgavio/sdk/next';
+
+const elgavio = createClient({ token: process.env.ELGAVIO_PREVIEW_TOKEN });
+
+export const GET = draftModeRoute({ client: elgavio, draftMode });
+```
+
+Then read with `draft: (await draftMode()).isEnabled`, and turn it off with
+`(await draftMode()).disable()` in a route of your own.
 
 ## Versions
 

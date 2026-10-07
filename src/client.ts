@@ -19,6 +19,7 @@ import type {
   DeliveredPath,
   DeliverySchema,
   Page,
+  PreviewVerification,
   Project,
   Redirect,
   RichTextFormat,
@@ -43,6 +44,14 @@ export interface ClientOptions {
   /** Kept responses revalidated with their ETag; `false` turns it off. A memory map by default. */
   cache?: CacheAdapter | false;
   fetch?: typeof globalThis.fetch;
+  /**
+   * Draft mode: entries, lists, singles, trees and `resolve` serve each entry as its draft where
+   * that draft would pass publish validation, else as published. Needs a secret token with the
+   * `preview` scope, or `previewSession`. Draft responses are never cached.
+   */
+  draft?: boolean;
+  /** `verifyPreview`'s `previewSession.value`: lets a public token read drafts for an hour. */
+  previewSession?: string;
 }
 
 interface ReadOptions<Format extends RichTextFormat> {
@@ -109,6 +118,9 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
         'Elgavio-Client': `elgavio-sdk/${SDK_VERSION}`,
+        ...(options.previewSession === undefined
+          ? {}
+          : { 'Elgavio-Preview': options.previewSession }),
         ...(cached === undefined ? {} : { 'If-None-Match': cached.etag }),
       },
     });
@@ -135,6 +147,12 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
     locale: query.locale ?? options.locale,
   });
 
+  // Only reads of content take draft mode.
+  const content = <Query extends { locale?: string }>(query: Query) => ({
+    ...localized(query),
+    draft: options.draft === true ? true : undefined,
+  });
+
   const entries = <
     Key extends ListKey<Content>,
     Format extends RichTextFormat = 'html',
@@ -145,7 +163,7 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
   ) =>
     request<Page<PickedEntry<Content, Key, Format, Field>>>(
       `/collections/${encodeKey(key)}/entries`,
-      localized(query) as QueryParams,
+      content(query) as QueryParams,
     );
 
   return {
@@ -183,7 +201,7 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
 
     /** One entry by id, in whichever collection it is. */
     entry: <Format extends RichTextFormat = 'html'>(id: string, query: ReadOptions<Format> = {}) =>
-      request<AnyEntry<Content, Format>>(`/entries/${encodeKey(id)}`, localized(query)),
+      request<AnyEntry<Content, Format>>(`/entries/${encodeKey(id)}`, content(query)),
 
     /** A single-entry collection's one entry. */
     single: <Key extends SingleKey<Content>, Format extends RichTextFormat = 'html'>(
@@ -192,12 +210,12 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
     ) =>
       request<PickedEntry<Content, Key, Format, never>>(
         `/collections/${encodeKey(key)}/entry`,
-        localized(query),
+        content(query),
       ),
 
     /** A hierarchical collection's entries, nested, without their content: for menus. */
     tree: (key: TreeKey<Content>, query: { locale?: string } = {}) =>
-      request<{ data: TreeNode[] }>(`/collections/${encodeKey(key)}/tree`, localized(query)),
+      request<{ data: TreeNode[] }>(`/collections/${encodeKey(key)}/tree`, content(query)),
 
     /** What a public path serves: an entry, a redirect, or `null` for nothing. */
     resolve: async <Format extends RichTextFormat = 'html'>(
@@ -206,7 +224,7 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
     ): Promise<Resolution<Content, Format> | null> => {
       try {
         return await request<Resolution<Content, Format>>('/resolve', {
-          ...localized(query),
+          ...content(query),
           path,
         });
       } catch (error) {
@@ -229,6 +247,12 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
      * take that before fetching everything, so nothing changed in between is missed.
      */
     changes: (since?: number) => request<Changes>('/changes', { since }),
+
+    /**
+     * Checks the `elgavioPreview` code the entry editor's Preview opened the app with: the entry to
+     * show in draft mode, and a preview session for reading drafts with a public token.
+     */
+    verifyPreview: (code: string) => request<PreviewVerification>('/preview/verify', { code }),
   };
 };
 
