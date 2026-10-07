@@ -67,14 +67,17 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Before the push, so a refused version leaves no tag behind.
-      - name: Publish to npm
-        run: npm publish --registry https://registry.npmjs.org
+      # Staged, not published: it goes public only once a maintainer approves it with 2FA
+      # (`npm stage list`, then `npm stage approve <id>`). Staged before the push, so a refused
+      # version leaves no tag behind.
+      - name: Stage on npm
+        run: npm stage publish --registry https://registry.npmjs.org
 
       - name: Push version bump and tag
         run: git push origin main --follow-tags
 
-      - name: Create GitHub Release
+      # A draft until the staged version is approved; publish it on GitHub then.
+      - name: Draft GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ steps.bump.outputs.tag }}" --title "${{ steps.bump.outputs.tag }}" --generate-notes
+        run: gh release create "${{ steps.bump.outputs.tag }}" --draft --title "${{ steps.bump.outputs.tag }}" --generate-notes
