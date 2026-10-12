@@ -15,14 +15,14 @@ export class ElgavioWebhookError extends Error {
   }
 }
 
-export interface VerifyWebhookOptions {
+export type VerifyWebhookOptions = {
   /** The webhook's signing secret, `whsec_…`. */
   secret: string;
   /** Seconds a signature stays valid. */
   tolerance?: number;
   /** Unix seconds; the current time when left out. */
   now?: number;
-}
+};
 
 const encoder = new TextEncoder();
 

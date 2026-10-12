@@ -4,7 +4,7 @@ import { isElgavioError } from './errors.js';
 import type { Change, DeliveredPath, PreviewEntry, WebhookPayload } from './types.js';
 import { ElgavioWebhookError, verifyWebhook, type VerifyWebhookOptions } from './webhook.js';
 
-export interface StaticParamsOptions {
+export type StaticParamsOptions = {
   /** Only this collection's entries. */
   collection?: string;
   /**
@@ -14,15 +14,15 @@ export interface StaticParamsOptions {
   basePath?: string;
   /** One language; the project's default when left out. */
   locale?: string;
-}
+};
 
-export interface StaticParam {
+export type StaticParam = {
   slug: string[];
-}
+};
 
-export interface LocalizedStaticParam extends StaticParam {
+export type LocalizedStaticParam = StaticParam & {
   locale: string;
-}
+};
 
 const segmentsOf = (path: string) => path.split('/').filter((segment) => segment !== '');
 
@@ -77,7 +77,7 @@ export const localizedStaticParams = async <Content extends ContentModel>(
   return perLocale.flat();
 };
 
-export interface RevalidateFromWebhookOptions extends VerifyWebhookOptions {
+export type RevalidateFromWebhookOptions = VerifyWebhookOptions & {
   /** `revalidatePath` from `next/cache`, passed in so the SDK needs no Next.js of its own. */
   revalidatePath: (path: string, type?: 'layout' | 'page') => void;
   /**
@@ -85,7 +85,7 @@ export interface RevalidateFromWebhookOptions extends VerifyWebhookOptions {
    * a locale prefix (`/${change.locale}${change.path}`) or a listing page that shows it.
    */
   pathsOf?: (change: Change) => readonly string[];
-}
+};
 
 const changedPaths = (change: Change) =>
   [change.path, change.previousPath].filter((path): path is string => path !== null);
@@ -133,14 +133,14 @@ export const revalidateFromWebhook =
     return Response.json({ revalidated: paths });
   };
 
-export interface DraftModeRouteOptions {
+export type DraftModeRouteOptions = {
   /** A client of a secret token with the `preview` scope. */
   client: Pick<ElgavioClient, 'verifyPreview'>;
   /** `draftMode` from `next/headers`, passed in so the SDK needs no Next.js of its own. */
   draftMode: () => Promise<{ enable: () => void }>;
   /** The app's route for the entry: its path by default. Return a locale prefix if routes have one. */
   pathOf?: (entry: PreviewEntry) => string;
-}
+};
 
 /**
  * The route a collection's preview URL opens: checks the `elgavioPreview` code, turns on draft

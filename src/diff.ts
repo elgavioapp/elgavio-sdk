@@ -1,10 +1,10 @@
 // A line diff for `elgavio check`: the longest common subsequence, which is fine for a types file
 // of a few thousand lines.
 
-export interface DiffLine {
+export type DiffLine = {
   kind: ' ' | '-' | '+';
   text: string;
-}
+};
 
 export const diffLines = (before: readonly string[], after: readonly string[]): DiffLine[] => {
   const rows = before.length + 1;

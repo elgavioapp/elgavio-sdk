@@ -4,10 +4,10 @@ import { ElgavioError, isElgavioError } from './errors.js';
 import { queryString } from './query.js';
 import { SDK_VERSION } from './version.js';
 
-interface Sent {
+type Sent = {
   url: string;
   headers: Record<string, string>;
-}
+};
 
 const json = (
   body: unknown,

@@ -6,7 +6,7 @@ export type FilterScalar = string | number | boolean | Date;
 export type FilterValue =
   FilterScalar | { [Operator in FilterOperator]?: FilterScalar | readonly FilterScalar[] };
 
-export interface QueryParams {
+export type QueryParams = {
   locale?: string;
   richText?: RichTextFormat;
   filter?: Record<string, FilterValue | undefined>;
@@ -18,7 +18,7 @@ export interface QueryParams {
   since?: number;
   draft?: boolean;
   code?: string;
-}
+};
 
 const scalarText = (value: FilterScalar): string =>
   value instanceof Date ? value.toISOString() : String(value);

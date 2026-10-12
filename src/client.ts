@@ -35,7 +35,7 @@ export const MAX_PAGE_LIMIT = 100;
 /** The most `paths()` and `redirects()` serve per page. */
 export const MAX_LONG_PAGE_LIMIT = 1000;
 
-export interface ClientOptions {
+export type ClientOptions = {
   /** A delivery token, `elg_…`. `undefined` is accepted so `process.env` passes straight in. */
   token: string | undefined;
   baseUrl?: string;
@@ -52,19 +52,19 @@ export interface ClientOptions {
   draft?: boolean;
   /** `verifyPreview`'s `previewSession.value`: lets a public token read drafts for an hour. */
   previewSession?: string;
-}
+};
 
-interface ReadOptions<Format extends RichTextFormat> {
+type ReadOptions<Format extends RichTextFormat> = {
   locale?: string;
   richText?: Format;
-}
+};
 
-export interface EntriesQuery<
+export type EntriesQuery<
   Content extends ContentModel,
   Key extends CollectionKey<Content>,
   Format extends RichTextFormat,
   Field extends FieldKey<Content, Key>,
-> extends ReadOptions<Format> {
+> = ReadOptions<Format> & {
   filter?: EntryFilter<Content, Key>;
   sort?: readonly SortKey<Content, Key>[];
   /** The top-level keys to serve, `blocks` among them; the system keys always come. */
@@ -72,14 +72,14 @@ export interface EntriesQuery<
   page?: number;
   /** At most 100. */
   limit?: number;
-}
+};
 
-export interface LongListQuery {
+export type LongListQuery = {
   locale?: string;
   page?: number;
   /** At most 1000. */
   limit?: number;
-}
+};
 
 export type Resolution<Content extends ContentModel, Format extends RichTextFormat> =
   | { type: 'entry'; collection: string; entry: AnyEntry<Content, Format> }

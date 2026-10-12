@@ -9,16 +9,16 @@ export type ErrorReason = NonNullable<DeliveryError['reason']>;
 
 export type FieldErrorCode = DeliveryError['fieldErrors'][number]['code'];
 
-export interface FieldError {
+export type FieldError = {
   /** The parameter it is about: `filter.tags`, `sort`, `limit`. */
   field: string;
   // A newer API may name a code this version doesn't know yet.
   code: FieldErrorCode | (string & {});
   message: string;
   params?: Record<string, number | string | boolean | readonly string[]>;
-}
+};
 
-interface ErrorEnvelope {
+type ErrorEnvelope = {
   error: {
     code: string;
     reason: string | null;
@@ -26,7 +26,7 @@ interface ErrorEnvelope {
     fieldErrors?: FieldError[];
     reasonData?: unknown;
   };
-}
+};
 
 const isEnvelope = (body: unknown): body is ErrorEnvelope => {
   if (typeof body !== 'object' || body === null || !('error' in body)) {

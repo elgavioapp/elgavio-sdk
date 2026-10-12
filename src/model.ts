@@ -5,21 +5,21 @@ import type { EntrySystemFields, FilterOperator, RichTextFormat } from './types.
  * One collection as the generated types describe it: its entry's own fields in each rich-text
  * form, what `filter` and `sort` take, and which reads it answers.
  */
-export interface CollectionModel {
+export type CollectionModel = {
   entry: { html: object; json: object; text: object };
   filter: object;
   sort: string;
   single: boolean;
   hierarchical: boolean;
-}
+};
 
 /** A project's content, as `elgavio types` writes it. */
-export interface ContentModel {
+export type ContentModel = {
   collections: Record<string, CollectionModel>;
-}
+};
 
 /** Without generated types: any collection, any field. */
-export interface UntypedContent {
+export type UntypedContent = {
   collections: Record<
     string,
     {
@@ -34,7 +34,7 @@ export interface UntypedContent {
       hierarchical: boolean;
     }
   >;
-}
+};
 
 /** One filterable key: a value for equality when `eq` is allowed, else operators to values. */
 export type FilterCondition<Value extends FilterScalar, Operator extends FilterOperator> =
