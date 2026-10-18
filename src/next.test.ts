@@ -156,6 +156,16 @@ describe('revalidateFromWebhook', () => {
     ]);
   });
 
+  it('revalidates everything for a change to the strings, which can show on any page', async () => {
+    const revalidatePath = vi.fn();
+    const handle = revalidateFromWebhook({ secret: SECRET, revalidatePath });
+
+    const response = await handle(webhookCall({ changes: [change('strings', null)] }));
+
+    expect(await response.json()).toEqual({ revalidated: ['/'] });
+    expect(revalidatePath.mock.calls).toEqual([['/', 'layout']]);
+  });
+
   it("maps a change to the app's routes", async () => {
     const revalidatePath = vi.fn();
     const handle = revalidateFromWebhook({

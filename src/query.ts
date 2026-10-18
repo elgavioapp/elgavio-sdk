@@ -1,4 +1,4 @@
-import type { FilterOperator, RichTextFormat } from './types.js';
+import type { FilterOperator, RichTextFormat, StringsFormat, StringsMissing } from './types.js';
 
 export type FilterScalar = string | number | boolean | Date;
 
@@ -9,6 +9,9 @@ export type FilterValue =
 export type QueryParams = {
   locale?: string;
   richText?: RichTextFormat;
+  format?: StringsFormat;
+  missing?: StringsMissing;
+  prefix?: readonly string[];
   filter?: Record<string, FilterValue | undefined>;
   sort?: readonly string[];
   fields?: readonly string[];
@@ -65,6 +68,15 @@ export const queryString = (params: QueryParams): string => {
   }
   if (params.richText !== undefined) {
     pairs.push(['richText', params.richText]);
+  }
+  if (params.format !== undefined) {
+    pairs.push(['format', params.format]);
+  }
+  if (params.missing !== undefined) {
+    pairs.push(['missing', params.missing]);
+  }
+  for (const prefix of params.prefix ?? []) {
+    pairs.push(['prefix', prefix]);
   }
   if (params.filter !== undefined) {
     pairs.push(...filterParams(params.filter));

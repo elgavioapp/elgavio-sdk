@@ -30,6 +30,7 @@ const schema = (fieldKey: string): DeliverySchema => ({
     },
   ],
   blocks: [],
+  strings: { keys: [], folders: [] },
 });
 
 let dir: string;
@@ -137,6 +138,76 @@ describe('elgavio check', () => {
   it('fails when the file was never written', async () => {
     expect(await run(['check'], dir)).toBe(1);
     expect(err.join('')).toContain("doesn't exist");
+  });
+});
+
+describe('elgavio strings', () => {
+  const catalog: Record<string, unknown> = {
+    en: { Save: 'Save', Modal: { Confirm: 'Sure?' } },
+    de: { Save: 'Speichern', Modal: { Confirm: '' } },
+  };
+  let urls: string[];
+
+  beforeEach(() => {
+    urls = [];
+    vi.stubEnv('ELGAVIO_TOKEN', 'elg_x');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        urls.push(url);
+        const { pathname, searchParams } = new URL(url);
+        if (pathname.endsWith('/project')) {
+          return Promise.resolve(
+            Response.json({
+              locales: [
+                { code: 'en', default: true },
+                { code: 'de', default: false },
+              ],
+            }),
+          );
+        }
+        return Promise.resolve(Response.json(catalog[searchParams.get('locale') ?? 'en']));
+      }),
+    );
+  });
+
+  it('writes a file per language, asking for the format and missing the config names', async () => {
+    await writeFile(
+      join(dir, 'elgavio.config.json'),
+      JSON.stringify({
+        strings: { output: 'src/locales/{locale}.json', format: 'nested', missing: 'omit' },
+      }),
+    );
+    expect(await run(['strings'], dir)).toBe(0);
+    expect(urls).toEqual([
+      'https://api.elgavio.com/delivery/v1/project',
+      'https://api.elgavio.com/delivery/v1/strings?locale=en&format=nested&missing=omit',
+      'https://api.elgavio.com/delivery/v1/strings?locale=de&format=nested&missing=omit',
+    ]);
+    await expect(readFile(join(dir, 'src/locales/de.json'), 'utf8')).resolves.toBe(
+      `${JSON.stringify(catalog.de, null, 2)}\n`,
+    );
+    await expect(readFile(join(dir, 'src/locales/en.json'), 'utf8')).resolves.toContain('Sure?');
+  });
+
+  it('asks for nothing it was not told to', async () => {
+    await writeFile(
+      join(dir, 'elgavio.config.json'),
+      JSON.stringify({ strings: { output: '{locale}.json' } }),
+    );
+    await run(['strings'], dir);
+    expect(urls[1]).toBe('https://api.elgavio.com/delivery/v1/strings?locale=en');
+  });
+
+  it.each([
+    ['{}', 'no "strings" section'],
+    [JSON.stringify({ strings: { output: 'strings.json' } }), '{locale}'],
+    [JSON.stringify({ strings: { output: '{locale}.json', format: 'tree' } }), '"nested", "flat"'],
+    [JSON.stringify({ strings: { output: '{locale}.json', missing: 'blank' } }), '"default"'],
+  ])('refuses the config %s', async (config, message) => {
+    await writeFile(join(dir, 'elgavio.config.json'), config);
+    await expect(run(['strings'], dir)).rejects.toThrow(message);
+    expect(urls).toEqual([]);
   });
 });
 

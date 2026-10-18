@@ -8,17 +8,20 @@ import { createClient } from './client.js';
 import { diffLines, formatDiff } from './diff.js';
 import { isElgavioError } from './errors.js';
 import { generateTypes } from './generate.js';
+import type { StringsFormat, StringsMissing } from './types.js';
 import { SDK_VERSION } from './version.js';
 
 const DEFAULT_OUTPUT = 'elgavio-types.ts';
 const CONFIG_FILE = 'elgavio.config.json';
+const LOCALE_PLACEHOLDER = '{locale}';
 const HASH_LINE = /^\/\/ elgavio-types-hash: ([0-9a-f]+)$/m;
 
 const USAGE = `Usage: elgavio <command> [options]
 
 Commands:
-  types   Write the project's content types from its live schema.
-  check   Fail when the committed types no longer match the live schema.
+  types     Write the project's content types from its live schema.
+  check     Fail when the committed types no longer match the live schema.
+  strings   Write the project's strings, a file per language, as "strings" in ${CONFIG_FILE} says.
 
 Options:
   --out <file>      Where the types file goes (default: ${DEFAULT_OUTPUT}, or "output" in ${CONFIG_FILE}).
@@ -64,21 +67,75 @@ const loadSetting = async (name: string, dir: string): Promise<string | undefine
   return undefined;
 };
 
-const loadOutput = async (dir: string, flag: string | undefined): Promise<string> => {
+type Config = Record<string, unknown>;
+
+const loadConfig = async (dir: string): Promise<Config> => {
+  const text = await readOptional(resolve(dir, CONFIG_FILE));
+  if (text === null) {
+    return {};
+  }
+  const config = JSON.parse(text) as unknown;
+  if (typeof config !== 'object' || config === null || Array.isArray(config)) {
+    throw new CliError(`${CONFIG_FILE} must be an object.`);
+  }
+  return config as Config;
+};
+
+const loadOutput = (config: Config, dir: string, flag: string | undefined): string => {
   if (flag !== undefined) {
     return resolve(dir, flag);
   }
-  const text = await readOptional(resolve(dir, CONFIG_FILE));
-  if (text === null) {
-    return resolve(dir, DEFAULT_OUTPUT);
-  }
-  const config = JSON.parse(text) as unknown;
-  const output =
-    typeof config === 'object' && config !== null && 'output' in config ? config.output : undefined;
+  const { output } = config;
   if (output !== undefined && typeof output !== 'string') {
     throw new CliError(`${CONFIG_FILE}: "output" must be a path.`);
   }
   return resolve(dir, output ?? DEFAULT_OUTPUT);
+};
+
+const FORMATS: readonly StringsFormat[] = ['nested', 'flat'];
+const MISSING: readonly StringsMissing[] = ['empty', 'omit', 'default'];
+
+type StringsSettings = {
+  output: string;
+  format: StringsFormat | undefined;
+  missing: StringsMissing | undefined;
+};
+
+const oneOf = <Value extends string>(
+  name: string,
+  value: unknown,
+  allowed: readonly Value[],
+): Value | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const found = allowed.find((candidate) => candidate === value);
+  if (found === undefined) {
+    throw new CliError(
+      `${CONFIG_FILE}: "strings.${name}" must be ${allowed.map((item) => `"${item}"`).join(', ')}.`,
+    );
+  }
+  return found;
+};
+
+const loadStrings = (config: Config): StringsSettings => {
+  const { strings } = config;
+  if (typeof strings !== 'object' || strings === null || Array.isArray(strings)) {
+    throw new CliError(
+      `${CONFIG_FILE} has no "strings" section. Add { "strings": { "output": "src/locales/{locale}.json" } }.`,
+    );
+  }
+  const { output, format, missing } = strings as Config;
+  if (typeof output !== 'string' || !output.includes(LOCALE_PLACEHOLDER)) {
+    throw new CliError(
+      `${CONFIG_FILE}: "strings.output" must be a path holding ${LOCALE_PLACEHOLDER}, one file per language.`,
+    );
+  }
+  return {
+    output,
+    format: oneOf('format', format, FORMATS),
+    missing: oneOf('missing', missing, MISSING),
+  };
 };
 
 const hashOf = (body: string) => createHash('sha256').update(body).digest('hex').slice(0, 16);
@@ -93,25 +150,55 @@ export const typesFile = (body: string): string =>
     body,
   ].join('\n');
 
-const fetchBody = async (token: string | undefined, apiUrl: string | undefined) => {
+const reachApi = async <Result>(
+  token: string | undefined,
+  apiUrl: string | undefined,
+  what: string,
+  read: (client: ReturnType<typeof createClient>) => Promise<Result>,
+): Promise<Result> => {
   if (token === undefined) {
     throw new CliError(
       'No token: set ELGAVIO_TOKEN in the environment or in .env.local / .env (a delivery token, elg_…).',
     );
   }
   try {
-    const schema = await createClient({ token, baseUrl: apiUrl, cache: false }).schema();
-    return generateTypes(schema);
+    return await read(createClient({ token, baseUrl: apiUrl, cache: false }));
   } catch (error) {
     if (isElgavioError(error, 'DELIVERY_TOKEN_INVALID')) {
       throw new CliError('The token was refused: it is unknown, revoked or expired.');
     }
     if (isElgavioError(error)) {
-      throw new CliError(`The API refused the schema: ${error.message}`);
+      throw new CliError(`The API refused ${what}: ${error.message}`);
     }
     throw new CliError(
       `Could not reach ${apiUrl ?? 'the API'}: ${error instanceof Error ? error.message : String(error)}`,
     );
+  }
+};
+
+const writeStrings = async (
+  settings: StringsSettings,
+  dir: string,
+  token: string | undefined,
+  apiUrl: string | undefined,
+) => {
+  const files = await reachApi(token, apiUrl, 'the strings', async (client) => {
+    const { locales } = await client.project();
+    return await Promise.all(
+      locales.map(async ({ code }) => ({
+        path: resolve(dir, settings.output.replaceAll(LOCALE_PLACEHOLDER, code)),
+        body: await client.strings({
+          locale: code,
+          format: settings.format,
+          missing: settings.missing,
+        }),
+      })),
+    );
+  });
+  for (const { path, body } of files) {
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, `${JSON.stringify(body, null, 2)}\n`);
+    stdout.write(`Wrote ${path}\n`);
   }
 };
 
@@ -137,14 +224,23 @@ export const run = async (args: string[], dir: string = cwd()): Promise<number> 
     stdout.write(`${USAGE}\n`);
     return command === undefined && values.help !== true ? 1 : 0;
   }
-  if (command !== 'types' && command !== 'check') {
+  if (command !== 'types' && command !== 'check' && command !== 'strings') {
     throw new CliError(`Unknown command "${command}".\n\n${USAGE}`);
   }
 
-  const output = await loadOutput(dir, values.out);
+  const config = await loadConfig(dir);
   const token = values.token ?? (await loadSetting('ELGAVIO_TOKEN', dir));
   const apiUrl = values['api-url'] ?? (await loadSetting('ELGAVIO_API_URL', dir));
-  const body = await fetchBody(token, apiUrl);
+
+  if (command === 'strings') {
+    await writeStrings(loadStrings(config), dir, token, apiUrl);
+    return 0;
+  }
+
+  const output = loadOutput(config, dir, values.out);
+  const body = generateTypes(
+    await reachApi(token, apiUrl, 'the schema', (client) => client.schema()),
+  );
   const file = typesFile(body);
 
   if (command === 'types') {

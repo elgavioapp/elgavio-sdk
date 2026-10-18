@@ -105,6 +105,13 @@ export interface paths {
                                 /** @description The keys `sort` takes in this collection. */
                                 sort: string[];
                             }[];
+                            /** @description The catalog's structure, never its texts. */
+                            strings: {
+                                /** @description Every string's full key, in the catalog order. */
+                                keys: string[];
+                                /** @description Every folder's key, in the catalog order: what `prefix` takes. */
+                                folders: string[];
+                            };
                             blocks: {
                                 /** @description The instance's `_block`. */
                                 key: string;
@@ -571,6 +578,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/delivery/v1/strings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The project's strings in one language: the texts an app keeps outside its content. Folders are never left out of a `nested` answer, an empty one is `{}`. `missing` decides what a string with no text becomes; a `prefix` keeps the whole key. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description A language of the project's; its default language when left out. */
+                    locale?: string;
+                    /** @description `nested`: one object per folder, in the catalog order. `flat`: one object of dotted keys. */
+                    format?: "nested" | "flat";
+                    /** @description What a string with no text in the language becomes. `empty`: `""`, so every key is always there. `omit`: the key is left out, for a library's own fallback. `default`: the default language's text, `""` where that is empty too. */
+                    missing?: "empty" | "omit" | "default";
+                    /** @description A folder's key, to serve only what is in it; repeat it for several. Keys stay whole: `Settings.Profile.Title` is that in every answer. A key that is not a folder is refused. */
+                    prefix?: string | string[];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeliveredStrings"];
+                    };
+                };
+                /** @description An error, in the envelope every error shares. */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeliveryErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/delivery/v1/changes": {
         parameters: {
             query?: never;
@@ -603,10 +664,10 @@ export interface paths {
                                 seq: number;
                                 at: string;
                                 /**
-                                 * @description `published`: an entry served for the first time or served differently, refetch it. `unpublished` and `deleted`: no longer served. `moved`: a new path or place in its tree. `media`: a media record's alt text, for every entry showing it. `redirect`: the redirect from `path` is new, changed or gone. `schema`: collections, blocks or languages changed, refetch what depends on them.
+                                 * @description `published`: an entry served for the first time or served differently, refetch it. `unpublished` and `deleted`: no longer served. `moved`: a new path or place in its tree. `media`: a media record's alt text, for every entry showing it. `redirect`: the redirect from `path` is new, changed or gone. `schema`: collections, blocks or languages changed, refetch what depends on them. `strings`: the catalog changed in `locale`.
                                  * @enum {string}
                                  */
-                                kind: "published" | "unpublished" | "deleted" | "moved" | "media" | "redirect" | "schema";
+                                kind: "published" | "unpublished" | "deleted" | "moved" | "media" | "redirect" | "schema" | "strings";
                                 /** @description The entry's id, or the media record's for `media`; an entry's other languages and entries referencing it read it too. */
                                 id: string | null;
                                 /** @description The entry's collection key; for `schema`, the collection changed, null for others. */
@@ -709,6 +770,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description The catalog. `nested`: each folder an object, each string its text. `flat`: dotted key to text. A whole-number key sorts first in a JavaScript object, whatever the order served. */
+        DeliveredStrings: {
+            [key: string]: string | components["schemas"]["DeliveredStrings"];
+        };
         DeliveryErrorResponse: {
             error: {
                 /** @enum {string} */
@@ -719,7 +784,7 @@ export interface components {
                 fieldErrors: {
                     field: string;
                     /** @enum {string} */
-                    code: "TOO_SHORT" | "TOO_LONG" | "TOO_FEW" | "TOO_MANY" | "TOO_SMALL" | "TOO_LARGE" | "INVALID_TYPE" | "INVALID_FORMAT" | "INVALID_VALUE" | "UNKNOWN_FIELD" | "INVALID" | "DELIVERY_FIELDS_UNKNOWN" | "DELIVERY_FILTER_SYNTAX" | "DELIVERY_FILTER_UNKNOWN_FIELD" | "DELIVERY_FILTER_NOT_FILTERABLE" | "DELIVERY_FILTER_OPERATOR" | "DELIVERY_FILTER_VALUE" | "DELIVERY_SORT_UNKNOWN_FIELD" | "DELIVERY_SORT_NOT_SORTABLE";
+                    code: "TOO_SHORT" | "TOO_LONG" | "TOO_FEW" | "TOO_MANY" | "TOO_SMALL" | "TOO_LARGE" | "INVALID_TYPE" | "INVALID_FORMAT" | "INVALID_VALUE" | "UNKNOWN_FIELD" | "INVALID" | "DELIVERY_FIELDS_UNKNOWN" | "DELIVERY_FILTER_SYNTAX" | "DELIVERY_FILTER_UNKNOWN_FIELD" | "DELIVERY_FILTER_NOT_FILTERABLE" | "DELIVERY_FILTER_OPERATOR" | "DELIVERY_FILTER_VALUE" | "DELIVERY_SORT_UNKNOWN_FIELD" | "DELIVERY_SORT_NOT_SORTABLE" | "DELIVERY_STRINGS_PREFIX_UNKNOWN";
                     message: string;
                     params?: {
                         [key: string]: number | string | boolean | string[];
@@ -740,7 +805,7 @@ export interface components {
             width: number | null;
             height: number | null;
         };
-        /** @description A `list` value: the option chosen. */
+        /** @description A `list` value: the option chosen, its label in the language asked for. */
         DeliveredListOption: {
             value: string;
             label: string;
@@ -913,10 +978,10 @@ export interface components {
                 seq: number;
                 at: string;
                 /**
-                 * @description `published`: an entry served for the first time or served differently, refetch it. `unpublished` and `deleted`: no longer served. `moved`: a new path or place in its tree. `media`: a media record's alt text, for every entry showing it. `redirect`: the redirect from `path` is new, changed or gone. `schema`: collections, blocks or languages changed, refetch what depends on them.
+                 * @description `published`: an entry served for the first time or served differently, refetch it. `unpublished` and `deleted`: no longer served. `moved`: a new path or place in its tree. `media`: a media record's alt text, for every entry showing it. `redirect`: the redirect from `path` is new, changed or gone. `schema`: collections, blocks or languages changed, refetch what depends on them. `strings`: the catalog changed in `locale`.
                  * @enum {string}
                  */
-                kind: "published" | "unpublished" | "deleted" | "moved" | "media" | "redirect" | "schema";
+                kind: "published" | "unpublished" | "deleted" | "moved" | "media" | "redirect" | "schema" | "strings";
                 /** @description The entry's id, or the media record's for `media`; an entry's other languages and entries referencing it read it too. */
                 id: string | null;
                 /** @description The entry's collection key; for `schema`, the collection changed, null for others. */

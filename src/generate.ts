@@ -1,4 +1,4 @@
-import type { DeliverySchema, SchemaCollection, SchemaField } from './types.js';
+import type { DeliverySchema, SchemaCollection, SchemaField, SchemaStrings } from './types.js';
 
 // Keys are `^[a-z][a-zA-Z0-9_]*$`, so a key is always a valid property name and its PascalCase a
 // valid type name. The suffixes (`Fields`, `Entry`, `Block`) keep every generated name distinct.
@@ -158,6 +158,59 @@ const filterType = (collection: SchemaCollection): string =>
     ),
   });
 
+// A folder is a map, a string its `null`. A map keeps the order keys were added in, whatever they
+// read as, and has no `__proto__` to trip over.
+type StringNode = Map<string, StringNode | null>;
+
+const stringTreeOf = ({ keys, folders }: SchemaStrings): StringNode => {
+  const root: StringNode = new Map();
+  const place = (key: string, text: boolean) => {
+    const segments = key.split('.');
+    const last = segments.pop() ?? '';
+    let folder = root;
+    for (const segment of segments) {
+      let next = folder.get(segment);
+      if (!next) {
+        next = new Map();
+        folder.set(segment, next);
+      }
+      folder = next;
+    }
+    if (!folder.has(last)) {
+      folder.set(last, text ? null : new Map());
+    }
+  };
+  for (const folder of folders) {
+    place(folder, false);
+  }
+  for (const key of keys) {
+    place(key, true);
+  }
+  return root;
+};
+
+const propertyName = (segment: string) =>
+  /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(segment) ? segment : literal(segment);
+
+const stringTreeType = (folder: StringNode): string =>
+  folder.size === 0
+    ? 'Record<string, never>'
+    : `{\n${indent(
+        [...folder]
+          .map(
+            ([segment, child]) =>
+              `${propertyName(segment)}: ${child === null ? 'string' : stringTreeType(child)};`,
+          )
+          .join('\n'),
+        1,
+      )}\n}`;
+
+const stringsSection = (strings: SchemaStrings): string[] => [
+  `export type StringKey = ${union(strings.keys.map(literal))};`,
+  `export type StringFolder = ${union(strings.folders.map(literal))};`,
+  `export type StringTree = ${stringTreeType(stringTreeOf(strings))};`,
+];
+
 const SDK_TYPES = [
   'BlockInstance',
   'Entry',
@@ -219,8 +272,9 @@ export const generateTypes = (schema: DeliverySchema): string => {
       '};',
     ].join('\n');
   });
+  sections.push(...stringsSection(schema.strings));
   sections.push(
-    `export interface ElgavioContent {\n  collections: ${objectType([], formatted, { after: collections }).replaceAll('\n', '\n  ')};\n}`,
+    `export interface ElgavioContent {\n  collections: ${objectType([], formatted, { after: collections }).replaceAll('\n', '\n  ')};\n  strings: { key: StringKey; folder: StringFolder; tree: StringTree };\n}`,
   );
 
   const body = `${sections.join('\n\n')}\n`;

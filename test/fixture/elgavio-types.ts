@@ -48,6 +48,28 @@ export type SettingsFields<Format extends RichTextFormat = 'html'> = {
 
 export type SettingsEntry<Format extends RichTextFormat = 'html'> = Entry<ElgavioContent, 'settings', Format>;
 
+export type StringKey = 'Settings.Profile.Title' | 'Settings.Profile.Save' | 'Settings.Language' | 'it\'s here' | '404' | 'Modal.Delete.Confirm';
+
+export type StringFolder = 'Settings' | 'Settings.Profile' | 'Modal' | 'Modal.Delete' | 'Empty';
+
+export type StringTree = {
+  Settings: {
+    Profile: {
+      Title: string;
+      Save: string;
+    };
+    Language: string;
+  };
+  Modal: {
+    Delete: {
+      Confirm: string;
+    };
+  };
+  Empty: Record<string, never>;
+  'it\'s here': string;
+  '404': string;
+};
+
 export interface ElgavioContent {
   collections: {
     pages: {
@@ -82,4 +104,5 @@ export interface ElgavioContent {
       hierarchical: false;
     };
   };
+  strings: { key: StringKey; folder: StringFolder; tree: StringTree };
 }

@@ -14,8 +14,27 @@ describe('generateTypes', () => {
   });
 
   it('imports nothing for a project without collections or blocks', () => {
-    expect(generateTypes({ locales: [], collections: [], blocks: [] })).toBe(
-      'export interface ElgavioContent {\n  collections: Record<string, never>;\n}\n',
+    expect(
+      generateTypes({
+        locales: [],
+        collections: [],
+        blocks: [],
+        strings: { keys: [], folders: [] },
+      }),
+    ).toBe(
+      [
+        'export type StringKey = never;',
+        '',
+        'export type StringFolder = never;',
+        '',
+        'export type StringTree = Record<string, never>;',
+        '',
+        'export interface ElgavioContent {',
+        '  collections: Record<string, never>;',
+        '  strings: { key: StringKey; folder: StringFolder; tree: StringTree };',
+        '}',
+        '',
+      ].join('\n'),
     );
   });
 
@@ -23,6 +42,7 @@ describe('generateTypes', () => {
     const output = generateTypes({
       locales: [],
       collections: [],
+      strings: { keys: [], folders: [] },
       blocks: [
         {
           key: 'tag',

@@ -63,6 +63,15 @@ export type Page<Item> = Omit<EntryPage, 'data'> & { data: Item[] };
 
 export type TreeNode = Schemas['DeliveredTreeNode'];
 
+type StringsParameters = NonNullable<paths['/delivery/v1/strings']['get']['parameters']['query']>;
+
+export type StringsFormat = NonNullable<StringsParameters['format']>;
+
+export type StringsMissing = NonNullable<StringsParameters['missing']>;
+
+/** `strings()` without generated types: folders nested, or dotted keys in one object. */
+export type DeliveredStrings = Schemas['DeliveredStrings'];
+
 export type DeliveredPath = Answer<'/delivery/v1/paths'>['data'][number];
 
 export type Redirect = Answer<'/delivery/v1/redirects'>['data'][number];
@@ -93,5 +102,7 @@ export type SchemaField = Schemas['DeliverySchemaField'];
 export type SchemaCollection = DeliverySchema['collections'][number];
 
 export type SchemaBlock = DeliverySchema['blocks'][number];
+
+export type SchemaStrings = DeliverySchema['strings'];
 
 export type FilterOperator = SchemaCollection['filters'][number]['operators'][number];

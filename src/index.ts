@@ -8,6 +8,7 @@ export {
   type EntriesQuery,
   type LongListQuery,
   type Resolution,
+  type StringsQuery,
 } from './client.js';
 export { memoryCache, type CacheAdapter, type CachedResponse } from './cache.js';
 export {
@@ -25,6 +26,10 @@ export type {
   Entry,
   FilterCondition,
   PickedEntry,
+  StringFolderOf,
+  StringKeyOf,
+  StringsModel,
+  StringsResult,
   UntypedContent,
 } from './model.js';
 export type { FilterScalar, FilterValue } from './query.js';

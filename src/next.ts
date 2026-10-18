@@ -90,9 +90,10 @@ export type RevalidateFromWebhookOptions = VerifyWebhookOptions & {
 const changedPaths = (change: Change) =>
   [change.path, change.previousPath].filter((path): path is string => path !== null);
 
-// A schema or media change can show anywhere, and a truncated call doesn't name everything.
+// A schema, media or strings change can show anywhere, and a truncated call doesn't name everything.
 const changesEverything = (payload: WebhookPayload) =>
-  payload.truncated || payload.changes.some(({ kind }) => kind === 'schema' || kind === 'media');
+  payload.truncated ||
+  payload.changes.some(({ kind }) => kind === 'schema' || kind === 'media' || kind === 'strings');
 
 /**
  * A route handler for a webhook: verifies the call, then revalidates the paths it names, or the

@@ -360,5 +360,16 @@
       "availableIn": ["pages"],
       "fields": []
     }
-  ]
+  ],
+  "strings": {
+    "keys": [
+      "Settings.Profile.Title",
+      "Settings.Profile.Save",
+      "Settings.Language",
+      "it's here",
+      "404",
+      "Modal.Delete.Confirm"
+    ],
+    "folders": ["Settings", "Settings.Profile", "Modal", "Modal.Delete", "Empty"]
+  }
 }

@@ -38,6 +38,7 @@ A collection's **Try it** page in Elgavio builds these calls for you.
 | `redirects(query)`      | one page of the redirects                                                   |
 | `changes(since)`        | the change feed: what changed since your last `next`                        |
 | `verifyPreview(code)`   | a preview code from Elgavio's Preview button: see [Preview](#preview)       |
+| `strings(query)`        | the project's strings in one language: see [Strings](#strings)              |
 | `project()`, `schema()` | the project's languages and collections; its fields, for the type generator |
 
 - **`filter`**: `{ key: value }` is equality; `{ key: { op: value } }` takes `eq`, `ne`, `in` (an
@@ -86,6 +87,59 @@ try {
 }
 ```
 
+## Strings
+
+The texts an app keeps outside its content (button labels, messages, the words of a screen) are
+the project's **strings**: keys in folders, a text per language. `strings()` reads them in one
+language.
+
+```ts
+const strings = await elgavio.strings({ locale: 'de' });
+strings.Settings.Profile.Title; // 'Profil'
+```
+
+- **`format`**: `'nested'` (the default) is an object per folder, in the order the catalog has;
+  `'flat'` is one object of dotted keys (`'Settings.Profile.Title'`).
+- **`missing`**: what a string with no text in the language becomes. `'empty'` (the default) is
+  `""`, so every key is always there. `'omit'` leaves the key out. `'default'` serves the project's
+  default language's text, and `""` where that is empty too.
+- **`prefix`**: a folder's key, or an array of them, to serve only what is in them. Keys stay whole
+  (`Settings.Profile.Title` is that whatever you asked for), so two responses merge and a key reads
+  the same wherever it was loaded. A key that is not a folder is refused.
+- **`locale`**: per call, or for every call with `createClient({ locale })`.
+
+Pick `missing` for the library that reads the catalog. react-intl treats `""` as a missing message
+and falls back to the default locale's, logging an error each time: `'omit'` lets its own fallback
+run quietly, or `'default'` gives it the text. i18next renders an empty string as it is, unless
+`returnEmptyString: false`, so `'omit'` or `'default'` there too. `'empty'` suits an app that must
+see every key.
+
+An integer-like key (`"404"`) sorts first in any JavaScript object, whatever order the API sent.
+That is how JavaScript objects work, and no response can keep such a key's place in a `nested`
+answer.
+
+A folder is never left out of a nested answer: one with no strings, or whose strings `'omit'` left
+out, is `{}`.
+
+### Strings in the app
+
+For an app that bundles its strings, `elgavio strings` writes a file per language. Say where in
+`elgavio.config.json`:
+
+```json
+{
+  "strings": {
+    "output": "src/locales/{locale}.json",
+    "format": "nested",
+    "missing": "omit"
+  }
+}
+```
+
+`{locale}` is each language's code, and `format` and `missing` are `strings()`'s (optional). The
+files are written as the API serves them, and not checked by `elgavio check`: a translator's edit
+should not fail a build. Run the command before the build, or on a schedule, to pick it up.
+
 ## Typed content
 
 ```sh
@@ -104,6 +158,44 @@ Collection keys, fields, filters and sort keys are then checked against your sch
 takes only single-entry collections, `tree()` only hierarchical ones, `fields` narrows the result,
 and `richText: 'json'` types every rich-text field as the document. Commit the file and run
 `elgavio check` in CI, so a renamed field fails the build before it breaks your app.
+
+The strings are typed too, by their keys and never their texts, so a translator's edit changes
+nothing here. `strings()` answers with the nested shape or the flat keys, narrowed by `prefix` and
+made partial by `missing: 'omit'`, and `prefix` takes only folders. The file also exports the keys
+for your own code:
+
+```ts
+import type { StringKey, StringFolder } from './elgavio-types';
+
+const t = (key: StringKey) => messages[key];
+```
+
+With react-intl or i18next, use them to check your calls against the catalog. A key renamed or
+deleted in Elgavio then fails `elgavio check`, and a call to it fails your build.
+
+```ts
+// i18next: the keys of the nested catalog
+import type { StringTree } from './elgavio-types';
+
+declare module 'i18next' {
+  interface CustomTypeOptions {
+    resources: { translation: StringTree };
+  }
+}
+
+// react-intl: message ids
+import type { StringKey } from './elgavio-types';
+declare global {
+  namespace FormatjsIntl {
+    interface Message {
+      ids: StringKey;
+    }
+  }
+}
+```
+
+A types file written by an earlier version has no strings: `strings()` then takes any key and
+answers untyped, until you run `elgavio types` again.
 
 The CLI reads `ELGAVIO_TOKEN` (and `ELGAVIO_API_URL`, if you aren't on `https://api.elgavio.com`)
 from the environment, then `.env.local`, then `.env`. In CI, set it as a secret. A `--token` flag
@@ -154,8 +246,8 @@ A refused call throws `ElgavioWebhookError`, whose `reason` is `signatureMissing
 needs none of this: it ignores the body.
 
 In Next.js, `revalidateFromWebhook` is the whole route handler. It revalidates each changed path
-(and a moved entry's old one), or the whole app for a change to the content types or media, or a
-truncated call, and answers 401 to an unsigned one.
+(and a moved entry's old one), or the whole app for a change to the content types, media or
+strings, or a truncated call, and answers 401 to an unsigned one.
 
 ```ts
 // app/api/elgavio/route.ts

@@ -10,6 +10,8 @@ import type {
   PickedEntry,
   SingleKey,
   SortKey,
+  StringFolderOf,
+  StringsResult,
   TreeKey,
   UntypedContent,
 } from './model.js';
@@ -23,6 +25,8 @@ import type {
   Project,
   Redirect,
   RichTextFormat,
+  StringsFormat,
+  StringsMissing,
   TreeNode,
 } from './types.js';
 import { SDK_VERSION } from './version.js';
@@ -79,6 +83,25 @@ export type LongListQuery = {
   page?: number;
   /** At most 1000. */
   limit?: number;
+};
+
+export type StringsQuery<
+  Content extends ContentModel,
+  Format extends StringsFormat,
+  Missing extends StringsMissing,
+  Prefix extends StringFolderOf<Content>,
+> = {
+  locale?: string;
+  /** `'nested'` (the default): an object per folder. `'flat'`: one object of dotted keys. */
+  format?: Format;
+  /**
+   * What a string with no text in the language becomes. `'empty'` (the default): `""`, so every key
+   * is there. `'omit'`: the key is left out, for a library's own fallback. `'default'`: the
+   * project's default language's text.
+   */
+  missing?: Missing;
+  /** Folders to serve, by key. Keys stay whole: `Settings.Profile.Title` is that in every answer. */
+  prefix?: Prefix | readonly Prefix[];
 };
 
 export type Resolution<Content extends ContentModel, Format extends RichTextFormat> =
@@ -172,6 +195,21 @@ export const createClient = <Content extends ContentModel = UntypedContent>(
 
     /** The project's collections and blocks, field by field: what `elgavio types` reads. */
     schema: () => request<DeliverySchema>('/schema'),
+
+    /** The project's strings in one language: the texts an app keeps outside its content. */
+    strings: <
+      Format extends StringsFormat = 'nested',
+      Missing extends StringsMissing = 'empty',
+      Prefix extends StringFolderOf<Content> = never,
+    >(
+      query: StringsQuery<Content, Format, Missing, Prefix> = {},
+    ) => {
+      const { prefix, ...rest } = query;
+      return request<StringsResult<Content, Format, Missing, Prefix>>('/strings', {
+        ...localized(rest),
+        prefix: prefix === undefined ? undefined : [prefix].flat(),
+      });
+    },
 
     /** One page of a collection's entries: newest published first, or in tree order. */
     entries,

@@ -63,6 +63,42 @@ export const checks = async () => {
   await elgavio.entries('posts', { fields: ['nope'] });
 };
 
+export const stringChecks = async () => {
+  const nested = await elgavio.strings();
+  nested.Settings.Profile.Title satisfies string;
+  nested.Empty satisfies Record<string, never>;
+  // @ts-expect-error: not a key of the catalog.
+  void nested.Settings.Profile.Missing;
+
+  const flat = await elgavio.strings({ format: 'flat' });
+  flat['Modal.Delete.Confirm'] satisfies string;
+  flat["it's here"] satisfies string;
+  // @ts-expect-error: a folder is not a string.
+  void flat.Settings;
+
+  const omitted = await elgavio.strings({ missing: 'omit' });
+  omitted.Settings?.Profile?.Title satisfies string | undefined;
+
+  const flatOmitted = await elgavio.strings({ format: 'flat', missing: 'omit' });
+  flatOmitted['Settings.Language'] satisfies string | undefined;
+
+  const under = await elgavio.strings({ format: 'flat', prefix: ['Settings', 'Modal.Delete'] });
+  under['Settings.Profile.Save'] satisfies string;
+  under['Modal.Delete.Confirm'] satisfies string;
+  // @ts-expect-error: outside the prefixes.
+  void under['404'];
+
+  const one = await elgavio.strings({ prefix: 'Settings.Profile', locale: 'de' });
+  one.Settings?.Profile?.Title satisfies string | undefined;
+
+  // @ts-expect-error: only folders are a prefix.
+  await elgavio.strings({ prefix: '404' });
+  // @ts-expect-error: not a format.
+  await elgavio.strings({ format: 'tree' });
+  // @ts-expect-error: not a missing mode.
+  await elgavio.strings({ missing: 'blank' });
+};
+
 const untyped = createClient({ token: 'elg_test' });
 
 export const untypedChecks = async () => {
@@ -73,4 +109,11 @@ export const untypedChecks = async () => {
   data[0]?.whatever satisfies unknown;
   const one = await untyped.single('settings');
   one.title satisfies string;
+};
+
+export const untypedStringChecks = async () => {
+  const nested = await untyped.strings({ prefix: 'Anything' });
+  nested.Anything satisfies unknown;
+  const flat = await untyped.strings({ format: 'flat' });
+  flat['Any.Key'] satisfies string | undefined;
 };

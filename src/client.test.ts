@@ -67,6 +67,17 @@ describe('queryString', () => {
     );
   });
 
+  it('repeats prefix, one per folder', () => {
+    expect(
+      queryString({
+        locale: 'de',
+        format: 'flat',
+        missing: 'omit',
+        prefix: ['Settings.Profile', 'Modal & more'],
+      }),
+    ).toBe('?locale=de&format=flat&missing=omit&prefix=Settings.Profile&prefix=Modal%20%26%20more');
+  });
+
   it('is empty without parameters', () => {
     expect(queryString({})).toBe('');
   });
@@ -112,6 +123,25 @@ describe('createClient', () => {
       'https://api.test/delivery/v1/collections/posts/entries?locale=de&sort=title',
       'https://api.test/delivery/v1/changes',
       'https://api.test/delivery/v1/collections/pages/tree?locale=en',
+    ]);
+  });
+
+  it("reads the strings in the client's language, a prefix or several, and no draft", async () => {
+    const { fetch, sent } = fakeFetch(json({ Save: 'Speichern' }), json({}), json({}));
+    const client = createClient({
+      token: 'elg_x',
+      baseUrl: 'https://api.test',
+      locale: 'de',
+      draft: true,
+      fetch,
+    });
+    await expect(client.strings()).resolves.toEqual({ Save: 'Speichern' });
+    await client.strings({ locale: 'en', format: 'flat', prefix: 'Settings' });
+    await client.strings({ missing: 'default', prefix: ['A', 'B.C'] });
+    expect(sent.map(({ url }) => url)).toEqual([
+      'https://api.test/delivery/v1/strings?locale=de',
+      'https://api.test/delivery/v1/strings?locale=en&format=flat&prefix=Settings',
+      'https://api.test/delivery/v1/strings?locale=de&missing=default&prefix=A&prefix=B.C',
     ]);
   });
 
