@@ -4,7 +4,7 @@
   "description": "The Elgavio delivery API client, with generated content types and the elgavio CLI",
   "license": "MIT",
   "type": "module",
-  "prettier": "@elgavioapp/code-quality/prettier.json",
+  "prettier": "@elgavio/code-quality/prettier.json",
   "engines": {
     "node": ">=20"
   },
@@ -36,7 +36,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "version": "node scripts/write-version.ts && git add src/version.ts",
-    "update:code-quality": "npm install @elgavioapp/code-quality@latest --min-release-age=0",
+    "update:code-quality": "npm install @elgavio/code-quality@latest --min-release-age=0",
     "generate:api": "node --env-file-if-exists=.env scripts/generate-api.ts"
   },
   "repository": {
@@ -47,7 +47,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@elgavioapp/code-quality": "^0.6.0",
+    "@elgavio/code-quality": "^0.7.0",
     "@types/node": "^24.19.0",
     "openapi-typescript": "^7.13.0",
     "oxlint": "^1.86.0",

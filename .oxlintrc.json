@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "extends": ["./node_modules/@elgavioapp/code-quality/oxlint/base.json"],
+  "extends": ["./node_modules/@elgavio/code-quality/oxlint/base.json"],
   "ignorePatterns": [
     "dist/**",
     "node_modules/**",

@@ -19,7 +19,6 @@ on:
 
 permissions:
   contents: write
-  packages: read
   # npm's trusted publishing: the registry trusts this workflow, so no npm token is stored.
   id-token: write
 
@@ -34,12 +33,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          registry-url: https://npm.pkg.github.com
-          scope: '@elgavioapp'
 
       - name: Install
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm ci
 
       - name: Typecheck, lint, test
