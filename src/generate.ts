@@ -274,7 +274,7 @@ export const generateTypes = (schema: DeliverySchema): string => {
   });
   sections.push(...stringsSection(schema.strings));
   sections.push(
-    `export interface ElgavioContent {\n  collections: ${objectType([], formatted, { after: collections }).replaceAll('\n', '\n  ')};\n  strings: { key: StringKey; folder: StringFolder; tree: StringTree };\n}`,
+    `export type ElgavioContent = {\n  collections: ${objectType([], formatted, { after: collections }).replaceAll('\n', '\n  ')};\n  strings: { key: StringKey; folder: StringFolder; tree: StringTree };\n};`,
   );
 
   const body = `${sections.join('\n\n')}\n`;

@@ -70,7 +70,7 @@ export type StringTree = {
   '404': string;
 };
 
-export interface ElgavioContent {
+export type ElgavioContent = {
   collections: {
     pages: {
       entry: { html: PagesFields<'html'>; json: PagesFields<'json'>; text: PagesFields<'text'> };
@@ -105,4 +105,4 @@ export interface ElgavioContent {
     };
   };
   strings: { key: StringKey; folder: StringFolder; tree: StringTree };
-}
+};

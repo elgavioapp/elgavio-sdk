@@ -29,10 +29,10 @@ describe('generateTypes', () => {
         '',
         'export type StringTree = Record<string, never>;',
         '',
-        'export interface ElgavioContent {',
+        'export type ElgavioContent = {',
         '  collections: Record<string, never>;',
         '  strings: { key: StringKey; folder: StringFolder; tree: StringTree };',
-        '}',
+        '};',
         '',
       ].join('\n'),
     );

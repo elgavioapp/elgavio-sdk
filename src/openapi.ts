@@ -832,8 +832,10 @@ export interface components {
         } | {
             /** @enum {string} */
             kind: "entry";
-            /** @description The target's public path. */
+            /** @description The target's public path, with `#` and the anchor when the link names one. */
             url: string;
+            /** @description The section of the target the link points at, without the `#`. */
+            anchor?: string;
             entry: {
                 id: string;
                 collection: string;
