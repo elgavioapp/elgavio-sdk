@@ -81,7 +81,7 @@ export type ElgavioContent = {
       sort: 'title' | 'publishedAt';
       single: false;
       hierarchical: true;
-      hasPages: true;
+      routable: true;
     };
     posts: {
       entry: { html: PostsFields<'html'>; json: PostsFields<'json'>; text: PostsFields<'text'> };
@@ -94,7 +94,7 @@ export type ElgavioContent = {
       sort: 'title' | 'publishedAt' | 'rating';
       single: false;
       hierarchical: false;
-      hasPages: true;
+      routable: true;
     };
     settings: {
       entry: { html: SettingsFields<'html'>; json: SettingsFields<'json'>; text: SettingsFields<'text'> };
@@ -104,7 +104,7 @@ export type ElgavioContent = {
       sort: 'title' | 'publishedAt';
       single: true;
       hierarchical: false;
-      hasPages: false;
+      routable: false;
     };
   };
   strings: { key: StringKey; folder: StringFolder; tree: StringTree };

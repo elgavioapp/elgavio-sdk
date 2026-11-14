@@ -36,8 +36,8 @@ export interface paths {
                                 key: string;
                                 name: string;
                                 pathPrefix: string | null;
-                                /** @description False: the entries are data other pages show, with no URL: `path` is null, and `/paths` and `/resolve` leave them out. */
-                                hasPages: boolean;
+                                /** @description False: the entries are data other entries show, with no path of their own: `path` is null, and `/paths` and `/resolve` leave them out. */
+                                routable: boolean;
                                 hierarchical: boolean;
                                 single: boolean;
                             }[];
@@ -95,7 +95,7 @@ export interface paths {
                                 key: string;
                                 name: string;
                                 pathPrefix: string | null;
-                                hasPages: boolean;
+                                routable: boolean;
                                 hierarchical: boolean;
                                 single: boolean;
                                 /** @description The entry's own fields, by key. */
@@ -740,7 +740,7 @@ export interface paths {
                                 id: string;
                                 collection: string;
                                 locale: string;
-                                /** @description Null in a collection without pages. */
+                                /** @description Null in a collection that isn't routable. */
                                 path: string | null;
                             };
                             /** @description Sent as `Elgavio-Preview` with `draft=true`, it lets this token read the project's drafts for an hour: how a public token, which never reads them on its own, previews. */
@@ -819,7 +819,7 @@ export interface components {
             id: string;
             /** @description The target's collection key. */
             collection: string;
-            /** @description Null in a collection without pages. */
+            /** @description Null in a collection that isn't routable. */
             path: string | null;
             title: string;
         } & {
@@ -945,13 +945,13 @@ export interface components {
             locale: string;
             title: string;
             slug: string;
-            /** @description The public path, prefix included, from the root: `/blog/hello`. Null in a collection without pages. */
+            /** @description The public path, prefix included, from the root: `/blog/hello`. Null in a collection that isn't routable. */
             path: string | null;
             publishedAt: string;
             /** @description Every other language the entry is delivered in. */
             alternates: {
                 locale: string;
-                /** @description Null in a collection without pages. */
+                /** @description Null in a collection that isn't routable. */
                 path: string | null;
             }[];
         } & {
@@ -961,7 +961,7 @@ export interface components {
             id: string;
             title: string;
             slug: string;
-            /** @description Null in a collection without pages. */
+            /** @description Null in a collection that isn't routable. */
             path: string | null;
             children: components["schemas"]["DeliveredTreeNode"][];
         };

@@ -214,7 +214,7 @@ describe('draftModeRoute', () => {
     expect(response.headers.get('Location')).toBe('https://app.example/de/ueber');
   });
 
-  it('redirects to the root for an entry without pages, which has no route', async () => {
+  it('redirects to the root for an entry that is not routable', async () => {
     const route = draftModeRoute({
       client: {
         verifyPreview: () =>

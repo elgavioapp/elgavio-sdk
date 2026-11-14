@@ -14,7 +14,7 @@
       "key": "pages",
       "name": "Pages",
       "pathPrefix": null,
-      "hasPages": true,
+      "routable": true,
       "hierarchical": true,
       "single": false,
       "fields": [
@@ -91,7 +91,7 @@
       "key": "posts",
       "name": "Posts",
       "pathPrefix": "blog",
-      "hasPages": true,
+      "routable": true,
       "hierarchical": false,
       "single": false,
       "fields": [
@@ -276,7 +276,7 @@
       "key": "settings",
       "name": "Settings",
       "pathPrefix": null,
-      "hasPages": false,
+      "routable": false,
       "hierarchical": false,
       "single": true,
       "fields": [

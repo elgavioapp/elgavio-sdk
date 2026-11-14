@@ -12,7 +12,7 @@ const schema = (fieldKey: string): DeliverySchema => ({
       key: 'posts',
       name: 'Posts',
       pathPrefix: null,
-      hasPages: true,
+      routable: true,
       hierarchical: false,
       single: false,
       fields: [

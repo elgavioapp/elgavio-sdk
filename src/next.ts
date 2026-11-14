@@ -140,8 +140,8 @@ export type DraftModeRouteOptions = {
   /** `draftMode` from `next/headers`, passed in so the SDK needs no Next.js of its own. */
   draftMode: () => Promise<{ enable: () => void }>;
   /**
-   * The app's route for the entry: its path by default, the root for an entry without pages, which
-   * has none. Return a locale prefix if routes have one.
+   * The app's route for the entry: its path by default, the root for an entry that isn't
+   * routable. Return a locale prefix if routes have one.
    */
   pathOf?: (entry: PreviewEntry) => string;
 };

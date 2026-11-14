@@ -18,8 +18,8 @@ export type CollectionModel = {
   sort: string;
   single: boolean;
   hierarchical: boolean;
-  /** False: the entries are data other pages show, with no URL. Missing from an older types file. */
-  hasPages?: boolean;
+  /** False: the entries have no path of their own. Missing from an older types file. */
+  routable?: boolean;
 };
 
 /** The catalog as the generated types describe it: every key, every folder, the nested shape. */
@@ -50,7 +50,7 @@ export type UntypedContent = {
       sort: string;
       single: boolean;
       hierarchical: boolean;
-      hasPages: boolean;
+      routable: boolean;
     }
   >;
   strings: { key: string; folder: string; tree: DeliveredStrings };
@@ -93,19 +93,19 @@ export type FieldKey<
   Key extends CollectionKey<Content>,
 > = keyof CollectionOf<Content, Key>['entry']['html'] & string;
 
-/** `path` and the alternates' paths: a string with pages, `null` without, either when unknown. */
-type EntryPaths<HasPages> = [HasPages] extends [true]
+/** `path` and the alternates' paths: a string when routable, `null` when not, either when unknown. */
+type EntryPaths<Routable> = [Routable] extends [true]
   ? { path: string; alternates: { locale: string; path: string }[] }
-  : [HasPages] extends [false]
+  : [Routable] extends [false]
     ? { path: null; alternates: { locale: string; path: null }[] }
     : Pick<EntrySystemFields, 'path' | 'alternates'>;
 
-/** The system keys of a collection's entry, its paths typed by whether it has pages. */
+/** The system keys of a collection's entry, its paths typed by whether it's routable. */
 export type EntrySystem<Content extends ContentModel, Key extends CollectionKey<Content>> = Omit<
   EntrySystemFields<Key>,
   'path' | 'alternates'
 > &
-  EntryPaths<CollectionOf<Content, Key>['hasPages']>;
+  EntryPaths<CollectionOf<Content, Key>['routable']>;
 
 export type Entry<
   Content extends ContentModel,

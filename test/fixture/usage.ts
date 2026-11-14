@@ -36,13 +36,13 @@ export const checks = async () => {
 
   const settings = await elgavio.single('settings');
   settings.siteName satisfies string;
-  // Settings has no pages, so no URL; posts have one in every language.
+  // Settings isn't routable, so it has no path; posts have one in every language.
   settings.path satisfies null;
   settings.alternates[0]?.path satisfies null | undefined;
   post?.path satisfies string | undefined;
   post?.alternates[0]?.path satisfies string | undefined;
   trimmed.data[0]?.path satisfies string | undefined;
-  // @ts-expect-error: an entry without pages has no path to route to.
+  // @ts-expect-error: an entry that isn't routable has no path.
   settings.path satisfies string;
 
   const pages = await elgavio.tree('pages');
