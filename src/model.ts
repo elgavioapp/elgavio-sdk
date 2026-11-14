@@ -18,6 +18,8 @@ export type CollectionModel = {
   sort: string;
   single: boolean;
   hierarchical: boolean;
+  /** False: the entries are data other pages show, with no URL. Missing from an older types file. */
+  hasPages?: boolean;
 };
 
 /** The catalog as the generated types describe it: every key, every folder, the nested shape. */
@@ -48,6 +50,7 @@ export type UntypedContent = {
       sort: string;
       single: boolean;
       hierarchical: boolean;
+      hasPages: boolean;
     }
   >;
   strings: { key: string; folder: string; tree: DeliveredStrings };
@@ -90,11 +93,25 @@ export type FieldKey<
   Key extends CollectionKey<Content>,
 > = keyof CollectionOf<Content, Key>['entry']['html'] & string;
 
+/** `path` and the alternates' paths: a string with pages, `null` without, either when unknown. */
+type EntryPaths<HasPages> = [HasPages] extends [true]
+  ? { path: string; alternates: { locale: string; path: string }[] }
+  : [HasPages] extends [false]
+    ? { path: null; alternates: { locale: string; path: null }[] }
+    : Pick<EntrySystemFields, 'path' | 'alternates'>;
+
+/** The system keys of a collection's entry, its paths typed by whether it has pages. */
+export type EntrySystem<Content extends ContentModel, Key extends CollectionKey<Content>> = Omit<
+  EntrySystemFields<Key>,
+  'path' | 'alternates'
+> &
+  EntryPaths<CollectionOf<Content, Key>['hasPages']>;
+
 export type Entry<
   Content extends ContentModel,
   Key extends CollectionKey<Content>,
   Format extends RichTextFormat = 'html',
-> = EntrySystemFields<Key> & CollectionOf<Content, Key>['entry'][Format];
+> = EntrySystem<Content, Key> & CollectionOf<Content, Key>['entry'][Format];
 
 /** Any collection's entry, told apart by `collection`. */
 export type AnyEntry<Content extends ContentModel, Format extends RichTextFormat = 'html'> = {
@@ -109,7 +126,7 @@ export type PickedEntry<
   Field extends string,
 > = [Field] extends [never]
   ? Entry<Content, Key, Format>
-  : EntrySystemFields<Key> &
+  : EntrySystem<Content, Key> &
       Pick<
         CollectionOf<Content, Key>['entry'][Format],
         Field & keyof CollectionOf<Content, Key>['entry'][Format]

@@ -214,6 +214,19 @@ describe('draftModeRoute', () => {
     expect(response.headers.get('Location')).toBe('https://app.example/de/ueber');
   });
 
+  it('redirects to the root for an entry without pages, which has no route', async () => {
+    const route = draftModeRoute({
+      client: {
+        verifyPreview: () =>
+          Promise.resolve({ ...verified, entry: { ...entry, collection: 'site', path: null } }),
+      },
+      draftMode: () => Promise.resolve({ enable: vi.fn() }),
+    });
+
+    const response = await route(new Request('https://app.example/api/preview?elgavioPreview=a.b'));
+    expect(response.headers.get('Location')).toBe('https://app.example/');
+  });
+
   it('answers a refused code with its reason, and leaves draft mode off', async () => {
     const enable = vi.fn();
     const route = draftModeRoute({

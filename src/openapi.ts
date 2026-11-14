@@ -36,6 +36,8 @@ export interface paths {
                                 key: string;
                                 name: string;
                                 pathPrefix: string | null;
+                                /** @description False: the entries are data other pages show, with no URL: `path` is null, and `/paths` and `/resolve` leave them out. */
+                                hasPages: boolean;
                                 hierarchical: boolean;
                                 single: boolean;
                             }[];
@@ -93,6 +95,7 @@ export interface paths {
                                 key: string;
                                 name: string;
                                 pathPrefix: string | null;
+                                hasPages: boolean;
                                 hierarchical: boolean;
                                 single: boolean;
                                 /** @description The entry's own fields, by key. */
@@ -737,7 +740,8 @@ export interface paths {
                                 id: string;
                                 collection: string;
                                 locale: string;
-                                path: string;
+                                /** @description Null in a collection without pages. */
+                                path: string | null;
                             };
                             /** @description Sent as `Elgavio-Preview` with `draft=true`, it lets this token read the project's drafts for an hour: how a public token, which never reads them on its own, previews. */
                             previewSession: {
@@ -815,7 +819,8 @@ export interface components {
             id: string;
             /** @description The target's collection key. */
             collection: string;
-            path: string;
+            /** @description Null in a collection without pages. */
+            path: string | null;
             title: string;
         } & {
             [key: string]: unknown;
@@ -940,13 +945,14 @@ export interface components {
             locale: string;
             title: string;
             slug: string;
-            /** @description The public path, prefix included, from the root: `/blog/hello`. */
-            path: string;
+            /** @description The public path, prefix included, from the root: `/blog/hello`. Null in a collection without pages. */
+            path: string | null;
             publishedAt: string;
             /** @description Every other language the entry is delivered in. */
             alternates: {
                 locale: string;
-                path: string;
+                /** @description Null in a collection without pages. */
+                path: string | null;
             }[];
         } & {
             [key: string]: unknown;
@@ -955,7 +961,8 @@ export interface components {
             id: string;
             title: string;
             slug: string;
-            path: string;
+            /** @description Null in a collection without pages. */
+            path: string | null;
             children: components["schemas"]["DeliveredTreeNode"][];
         };
         /** @description The body of a webhook's `POST`. `Elgavio-Signature` is `t=<unix seconds>,v1=<hex>`, the HMAC-SHA256 of `<t>.<body>` under the signing secret. */

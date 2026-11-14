@@ -36,6 +36,14 @@ export const checks = async () => {
 
   const settings = await elgavio.single('settings');
   settings.siteName satisfies string;
+  // Settings has no pages, so no URL; posts have one in every language.
+  settings.path satisfies null;
+  settings.alternates[0]?.path satisfies null | undefined;
+  post?.path satisfies string | undefined;
+  post?.alternates[0]?.path satisfies string | undefined;
+  trimmed.data[0]?.path satisfies string | undefined;
+  // @ts-expect-error: an entry without pages has no path to route to.
+  settings.path satisfies string;
 
   const pages = await elgavio.tree('pages');
   pages.data[0]?.children satisfies unknown[] | undefined;
@@ -109,6 +117,7 @@ export const untypedChecks = async () => {
   data[0]?.whatever satisfies unknown;
   const one = await untyped.single('settings');
   one.title satisfies string;
+  one.path satisfies string | null;
 };
 
 export const untypedStringChecks = async () => {

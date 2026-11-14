@@ -49,6 +49,9 @@ A collection's **Try it** page in Elgavio builds these calls for you.
   `title`, `slug`, `path`, `publishedAt` and `alternates` always come.
 - **`path`**: the entry's public URL path, from the root, and unique across the project in each
   language: one path is one entry, whichever collection it's in, so `resolve` never has to choose.
+  `null` in a collection whose entries aren't pages (`hasPages: false` in `project()`), such as
+  settings or categories other pages show: `paths()` and `resolve()` leave those out, a reference
+  to one still comes, and a link to one doesn't. The generated types know which is which.
 - **`locale`**: per call, or for every call with `createClient({ locale })`. The project's default
   language otherwise.
 - **`richText`**: `'html'` (the default), `'json'` (the document, for native and component

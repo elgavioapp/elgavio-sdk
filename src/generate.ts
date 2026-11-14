@@ -269,6 +269,7 @@ export const generateTypes = (schema: DeliverySchema): string => {
       `  sort: ${union(collection.sort.map(literal))};`,
       `  single: ${String(collection.single)};`,
       `  hierarchical: ${String(collection.hierarchical)};`,
+      `  hasPages: ${String(collection.hasPages)};`,
       '};',
     ].join('\n');
   });
