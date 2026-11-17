@@ -37,7 +37,8 @@
     "format:check": "prettier --check .",
     "version": "node scripts/write-version.ts && git add src/version.ts",
     "update:code-quality": "npm install @elgavio/code-quality@latest --min-release-age=0",
-    "generate:api": "node --env-file-if-exists=.env scripts/generate-api.ts"
+    "generate:api": "node --env-file-if-exists=.env scripts/generate-api.ts",
+    "audit": "elgavio-audit"
   },
   "repository": {
     "type": "git",
@@ -47,7 +48,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@elgavio/code-quality": "^0.7.0",
+    "@elgavio/code-quality": "^0.9.0",
     "@types/node": "^24.19.0",
     "openapi-typescript": "^7.13.0",
     "oxlint": "^1.86.0",
@@ -61,5 +62,8 @@
     "openapi-typescript": {
       "typescript": "$typescript"
     }
+  },
+  "auditExceptions": {
+    "GHSA-fc5q-39xc-vjpf": "picomatch ReDoS, every version affected. Reached only through Vitest at test time, matching the test runner's own patterns."
   }
 }
