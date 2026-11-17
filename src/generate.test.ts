@@ -56,6 +56,7 @@ describe('generateTypes', () => {
               helpText: null,
               cardinality: { kind: 'one' },
               required: true,
+              shared: false,
               type: 'list',
               config: { options: [{ value: 'Media', label: 'Media' }] },
             },

@@ -161,7 +161,8 @@ const elgavio = createClient<ElgavioContent>({ token: process.env.ELGAVIO_TOKEN 
 
 Collection keys, fields, filters and sort keys are then checked against your schema: `single()`
 takes only single-entry collections, `tree()` only hierarchical ones, `fields` narrows the result,
-and `richText: 'json'` types every rich-text field as the document. Commit the file and run
+and `richText: 'json'` types every rich-text field as the document. A field that holds one value
+for every language carries a `Same in every language.` doc comment. Commit the file and run
 `elgavio check` in CI, so a renamed field fails the build before it breaks your app.
 
 The strings are typed too, by their keys and never their texts, so a translator's edit changes

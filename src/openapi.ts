@@ -1021,6 +1021,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "text";
             config: {
@@ -1043,6 +1045,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "richText";
         } | {
@@ -1062,6 +1066,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "number";
             config: {
@@ -1086,6 +1092,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "boolean";
         } | {
@@ -1105,6 +1113,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "date";
             config: {
@@ -1128,6 +1138,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "list";
             config: {
@@ -1153,6 +1165,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "json";
         } | {
@@ -1172,6 +1186,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "media";
             config: {
@@ -1194,6 +1210,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "reference";
             config: {
@@ -1222,6 +1240,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "link";
         } | {
@@ -1241,6 +1261,8 @@ export interface components {
             };
             /** @description Only on `one`: always present and never empty. An optional field is left out when empty; a `group` is always present. */
             required: boolean;
+            /** @description Same in every language: one value per entry, served alike in each language it's in. Only a collection's top-level field. */
+            shared: boolean;
             /** @enum {string} */
             type: "group";
             children: components["schemas"]["DeliverySchemaField"][];

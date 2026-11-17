@@ -125,10 +125,10 @@ const member = (field: SchemaField, formatted: Formatted): string => {
     return `${field.key}: ${many ? `Array<${shape}>` : shape};`;
   }
   const type = leafType(field, formatted);
-  if (many) {
-    return `${field.key}: Array<${type}>;`;
-  }
-  return `${field.key}${field.required ? '' : '?'}: ${type};`;
+  const line = many
+    ? `${field.key}: Array<${type}>;`
+    : `${field.key}${field.required ? '' : '?'}: ${type};`;
+  return field.shared ? `/** Same in every language. */\n${line}` : line;
 };
 
 const filterValueType = (collection: SchemaCollection, key: string): string => {

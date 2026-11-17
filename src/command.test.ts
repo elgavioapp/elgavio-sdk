@@ -22,6 +22,7 @@ const schema = (fieldKey: string): DeliverySchema => ({
           helpText: null,
           cardinality: { kind: 'one' },
           required: false,
+          shared: false,
           type: 'text',
           config: { maxLength: null },
         },

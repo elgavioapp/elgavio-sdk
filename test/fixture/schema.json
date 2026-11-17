@@ -26,6 +26,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": false,
           "type": "group",
           "children": [
             {
@@ -36,6 +37,7 @@
                 "kind": "one"
               },
               "required": false,
+              "shared": false,
               "type": "text",
               "config": {
                 "maxLength": 160
@@ -51,6 +53,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": false,
           "type": "reference",
           "config": {
             "targets": [
@@ -69,6 +72,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": true,
           "type": "media",
           "config": {
             "accept": "image/*"
@@ -103,6 +107,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": false,
           "type": "text",
           "config": {
             "maxLength": null
@@ -116,6 +121,7 @@
             "kind": "one"
           },
           "required": true,
+          "shared": false,
           "type": "richText"
         },
         {
@@ -128,6 +134,7 @@
             "max": null
           },
           "required": false,
+          "shared": true,
           "type": "list",
           "config": {
             "options": [
@@ -150,6 +157,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": false,
           "type": "number",
           "config": {
             "min": 0,
@@ -165,6 +173,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": false,
           "type": "boolean"
         },
         {
@@ -175,6 +184,7 @@
             "kind": "one"
           },
           "required": true,
+          "shared": false,
           "type": "date",
           "config": {
             "time": false
@@ -190,6 +200,7 @@
             "max": null
           },
           "required": false,
+          "shared": false,
           "type": "group",
           "children": [
             {
@@ -200,6 +211,7 @@
                 "kind": "one"
               },
               "required": true,
+              "shared": false,
               "type": "text",
               "config": {
                 "maxLength": null
@@ -213,6 +225,7 @@
                 "kind": "one"
               },
               "required": true,
+              "shared": false,
               "type": "link"
             }
           ]
@@ -227,6 +240,7 @@
             "max": null
           },
           "required": false,
+          "shared": false,
           "type": "reference",
           "config": {
             "targets": [
@@ -249,6 +263,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": false,
           "type": "json"
         }
       ],
@@ -288,6 +303,7 @@
             "kind": "one"
           },
           "required": true,
+          "shared": false,
           "type": "text",
           "config": {
             "maxLength": null
@@ -318,6 +334,7 @@
             "kind": "one"
           },
           "required": true,
+          "shared": false,
           "type": "text",
           "config": {
             "maxLength": null
@@ -331,6 +348,7 @@
             "kind": "one"
           },
           "required": false,
+          "shared": false,
           "type": "richText"
         }
       ]
@@ -349,6 +367,7 @@
             "kind": "one"
           },
           "required": true,
+          "shared": false,
           "type": "text",
           "config": {
             "maxLength": null

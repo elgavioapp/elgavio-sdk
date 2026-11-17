@@ -16,6 +16,7 @@ export type PagesFields<Format extends RichTextFormat = 'html'> = {
     description?: string;
   };
   featuredPost?: Reference<'posts', Pick<PostsFields<Format>, 'excerpt'>>;
+  /** Same in every language. */
   hero?: Media;
   blocks: Array<HeroBlock<Format> | DividerBlock>;
 };
@@ -25,6 +26,7 @@ export type PagesEntry<Format extends RichTextFormat = 'html'> = Entry<ElgavioCo
 export type PostsFields<Format extends RichTextFormat = 'html'> = {
   excerpt?: string;
   body: RichText<Format>;
+  /** Same in every language. */
   tags: Array<ListOption<'news' | 'it\'s'>>;
   rating?: number;
   featured?: boolean;
