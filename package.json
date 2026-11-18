@@ -62,8 +62,5 @@
     "openapi-typescript": {
       "typescript": "$typescript"
     }
-  },
-  "auditExceptions": {
-    "GHSA-fc5q-39xc-vjpf": "picomatch ReDoS, every version affected. Reached only through Vitest at test time, matching the test runner's own patterns."
   }
 }
