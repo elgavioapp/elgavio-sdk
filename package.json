@@ -30,6 +30,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit && tsc --noEmit -p test/fixture",
     "lint": "oxlint --type-aware --report-unused-disable-directives-severity=error --max-warnings=0 .",
+    "check": "npm run format:check && npm run typecheck && npm run lint",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
